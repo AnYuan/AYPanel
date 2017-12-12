@@ -43,22 +43,28 @@ static CGFloat kAYDefaultPartialRevealHeight = 264.0;
     self.drawerScrollView.bounces = NO;
     self.drawerScrollView.decelerationRate = UIScrollViewDecelerationRateFast;
     
+    [self.tableView setScrollEnabled:NO];
+    self.tableView.bounces = NO;
 
     [self.tableView registerClass:[UITableViewCell class] forCellReuseIdentifier:@"table view cell"];
 }
 
 - (void)viewDidLayoutSubviews {
     self.headerView.frame = CGRectMake(0, 0, self.view.bounds.size.width, 60);
-    self.tableView.frame = CGRectMake(0, 60, self.view.bounds.size.width, 300);
+    self.tableView.frame = CGRectMake(0, 60, self.view.bounds.size.width, self.view.bounds.size.height - 60);
     self.tableView.backgroundColor = [UIColor yellowColor];
     
-    self.drawerContentContainer.frame = CGRectMake(0, self.view.bounds.size.height - 68, self.view.bounds.size.width, self.view.bounds.size.height);
-
     self.drawerScrollView.frame = CGRectMake(0, 20, self.view.bounds.size.width, self.view.bounds.size.height);
+
+    
+    self.drawerContentContainer.frame = CGRectMake(0, self.drawerScrollView.bounds.size.height - 80, self.view.bounds.size.width, self.view.bounds.size.height);
+
     
     self.drawerScrollView.contentSize = CGSizeMake(self.view.bounds.size.width, 2 * self.drawerScrollView.frame.size.height - kAYDefaultCollapsedHeight - self.view.safeAreaInsets.bottom);
     self.drawerScrollView.transform = CGAffineTransformIdentity;
     self.drawerContentContainer.transform = self.drawerScrollView.transform;
+    
+    [self setDrawerPosition:XPannelPositionCollapsed animated:NO];
 }
 
 #pragma mark - Getter and Setter
@@ -119,7 +125,6 @@ static CGFloat kAYDefaultPartialRevealHeight = 264.0;
 - (void)scrollViewDidScroll:(UIScrollView *)scrollView {
     if (scrollView == self.drawerScrollView) {
 //        NSLog(@"scrollView did scroll");
-        
     }
 }
 
@@ -179,8 +184,12 @@ static CGFloat kAYDefaultPartialRevealHeight = 264.0;
     __weak typeof (self) weakSelf = self;
     [UIView animateWithDuration:0.3 delay:0.0 usingSpringWithDamping:0.75 initialSpringVelocity:0.0 options:UIViewAnimationOptionCurveEaseInOut animations:^{
         [weakSelf.drawerScrollView setContentOffset:CGPointMake(0, stopToMoveTo - lowestStop) animated:NO];
+        
+        [weakSelf.tableView setScrollEnabled:position == XPannelPositionOpen];
+        
     } completion:^(BOOL finished) {
         weakSelf.isAnimatingDrawerPosition = NO;
     }];
 }
+
 @end
