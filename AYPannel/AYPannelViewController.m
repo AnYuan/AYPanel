@@ -148,22 +148,17 @@ static CGFloat kAYDefaultPartialRevealHeight = 264.0;
 
 - (void)scrollViewDidScroll:(UIScrollView *)scrollView {
     
-    NSLog(@"scroll view is %@", scrollView);
-    
     if (scrollView == self.drawerScrollView) {
 //        NSLog(@"scrollView did scroll");
 //        self.shouldScrollDrawerScrollView = NO;
 
-        
     } else if (scrollView == self.tableView) {
-        NSLog(@"table view is %f", self.tableView.contentOffset.y);
+    
         if (CGPointEqualToPoint(self.tableView.contentOffset, CGPointZero) && self.drawerScrollView.contentOffset.y > kAYDefaultCollapsedHeight) {
             [self.tableView setScrollEnabled:NO];
-//            self.tableView.canCancelContentTouches = NO;
             self.shouldScrollDrawerScrollView = YES;
         } else {
             [self.tableView setScrollEnabled:YES];
-
             self.shouldScrollDrawerScrollView = NO;
         }
     }
@@ -239,15 +234,11 @@ static CGFloat kAYDefaultPartialRevealHeight = 264.0;
 }
 
 - (void)panGestureRecognizerAction:(UIPanGestureRecognizer *)getsutre {
-    NSLog(@"############# %f", [getsutre translationInView:self.drawerScrollView].y);
-//    NSLog(@"############# current contentoffset is %f", self.drawerScrollView.contentOffset.y);
+    
     if (self.shouldScrollDrawerScrollView && getsutre.state == UIGestureRecognizerStateChanged) {
         CGPoint old = [getsutre translationInView:self.drawerScrollView];
         CGPoint p = CGPointMake(0, self.drawerScrollView.frame.size.height - fabs(old.y) - 80);
-//        NSLog(@"$$$$new p is %f", p.y);
         [self.drawerScrollView setContentOffset:p];
-        
-        
     } else if (self.shouldScrollDrawerScrollView && getsutre.state == UIGestureRecognizerStateEnded) {
         self.shouldScrollDrawerScrollView = NO;
         CGFloat lowestStop = kAYDefaultCollapsedHeight;
