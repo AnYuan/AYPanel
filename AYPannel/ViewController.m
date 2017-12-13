@@ -21,7 +21,12 @@
     [super viewDidLoad];
     self.view.backgroundColor = [UIColor greenColor];
     
-    self.xPannelViewController = [[AYPannelViewController alloc] initWithPrimaryContentViewController:[AYPrimaryContentViewController new] drawerContentViewController:[AYDrawerContentViewController new]];
+    
+    AYPrimaryContentViewController *p = [AYPrimaryContentViewController new];
+    AYDrawerContentViewController *d = [AYDrawerContentViewController new];
+    self.xPannelViewController = [[AYPannelViewController alloc] initWithPrimaryContentViewController:p drawerContentViewController:d];
+    
+    d.drawerScrollDelegate = self.xPannelViewController;
     
     [self addChildViewController:self.xPannelViewController];
     self.xPannelViewController.view.frame = self.view.bounds;

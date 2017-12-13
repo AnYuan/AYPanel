@@ -8,6 +8,7 @@
 
 #import "AYPannelViewController.h"
 #import "AYPassthroughScrollView.h"
+#import "AYDrawerContentViewController.h"
 
 static CGFloat kAYDefaultCollapsedHeight = 68.0;
 static CGFloat kAYDefaultPartialRevealHeight = 264.0;
@@ -43,9 +44,6 @@ static CGFloat kAYDefaultPartialRevealHeight = 264.0;
     // Do any additional setup after loading the view.
     
     self.lastDragTargetContentOffSet = CGPointZero;
-    
-//    [self.drawerContentContainer addSubview:self.headerView];
-//    [self.drawerContentContainer addSubview:self.tableView];
     
     [self.drawerScrollView addSubview:self.drawerContentContainer];
 //    self.drawerScrollView.delaysContentTouches = YES;
@@ -89,7 +87,7 @@ static CGFloat kAYDefaultPartialRevealHeight = 264.0;
     self.drawerScrollView.transform = CGAffineTransformIdentity;
     self.drawerContentContainer.transform = self.drawerScrollView.transform;
     
-    [self setDrawerPosition:XPannelPositionCollapsed animated:NO];
+    [self setDrawerPosition:AYPannelPositionCollapsed animated:NO];
 }
 
 #pragma mark - Getter and Setter
@@ -156,13 +154,13 @@ static CGFloat kAYDefaultPartialRevealHeight = 264.0;
         
         if (fabs(currentClosestStop - (self.drawerScrollView.frame.size.height)) <= FLT_EPSILON) {
             //open
-            [self setDrawerPosition:XPannelPositionOpen animated:YES];
+            [self setDrawerPosition:AYPannelPositionOpen animated:YES];
         } else if (fabs(currentClosestStop - kAYDefaultCollapsedHeight) <= FLT_EPSILON) {
             //collapsed
-            [self setDrawerPosition:XPannelPositionCollapsed animated:YES];
+            [self setDrawerPosition:AYPannelPositionCollapsed animated:YES];
         } else {
             //partially revealed
-            [self setDrawerPosition:XPannelPositionPartiallyRevealed animated:YES];
+            [self setDrawerPosition:AYPannelPositionPartiallyRevealed animated:YES];
         }
     }
 }
@@ -174,16 +172,16 @@ static CGFloat kAYDefaultPartialRevealHeight = 264.0;
     }
 }
 
-- (void)setDrawerPosition:(XPannelPosition)position
+- (void)setDrawerPosition:(AYPannelPosition)position
                  animated:(BOOL)animated {
     
     CGFloat stopToMoveTo;
     CGFloat lowestStop = kAYDefaultCollapsedHeight;
-    if (position == XPannelPositionCollapsed) {
+    if (position == AYPannelPositionCollapsed) {
         stopToMoveTo = kAYDefaultCollapsedHeight;
-    } else if (position == XPannelPositionPartiallyRevealed) {
+    } else if (position == AYPannelPositionPartiallyRevealed) {
         stopToMoveTo = kAYDefaultPartialRevealHeight;
-    } else if (position == XPannelPositionOpen) {
+    } else if (position == AYPannelPositionOpen) {
         stopToMoveTo = self.drawerScrollView.frame.size.height;
     } else {
         stopToMoveTo = 0.0f;
@@ -232,17 +230,32 @@ static CGFloat kAYDefaultPartialRevealHeight = 264.0;
         
         if (fabs(currentClosestStop - (self.drawerScrollView.frame.size.height)) <= FLT_EPSILON) {
             //open
-            [self setDrawerPosition:XPannelPositionOpen animated:YES];
+            [self setDrawerPosition:AYPannelPositionOpen animated:YES];
         } else if (fabs(currentClosestStop - kAYDefaultCollapsedHeight) <= FLT_EPSILON) {
             //collapsed
-            [self setDrawerPosition:XPannelPositionCollapsed animated:YES];
+            [self setDrawerPosition:AYPannelPositionCollapsed animated:YES];
         } else {
             //partially revealed
-            [self setDrawerPosition:XPannelPositionPartiallyRevealed animated:YES];
+            [self setDrawerPosition:AYPannelPositionPartiallyRevealed animated:YES];
         }
 
     }
 }
+
+#pragma mark - AYDrawerScrollViewDelegate
+
+- (void)drawerScrollViewDidScroll:(UIScrollView *)scrollView {
+    if (CGPointEqualToPoint(scrollView.contentOffset, CGPointZero)) {
+        
+        self.shouldScrollDrawerScrollView = YES;
+        [scrollView setScrollEnabled:NO];
+        
+    } else {
+        self.shouldScrollDrawerScrollView = NO;
+        [scrollView setScrollEnabled:YES];
+    }
+}
+
 
 #pragma mark - AYPassthroughScrollViewDelegate
 - (BOOL)shouldTouchPassthroughScrollView:(AYPassthroughScrollView *)scrollView
@@ -256,4 +269,5 @@ static CGFloat kAYDefaultPartialRevealHeight = 264.0;
                          point:(CGPoint)point {
     return self.primaryContentContainer;
 }
+
 @end

@@ -10,5 +10,13 @@
 
 #import "AYPannelViewController.h"
 
+@protocol AYPannelViewControllerDelegate;
+
+@protocol AYDrawerScrollViewDelegate
+- (void)drawerScrollViewDidScroll:(UIScrollView *)scrollView;
+@end
+
+
 @interface AYDrawerContentViewController : UIViewController <AYPannelViewControllerDelegate>
+@property (nonatomic, weak) id<AYDrawerScrollViewDelegate> drawerScrollDelegate;
 @end

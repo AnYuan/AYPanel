@@ -8,25 +8,27 @@
 
 #import <UIKit/UIKit.h>
 
-typedef NS_ENUM(NSUInteger, XPannelPosition) {
-    XPannelPositionCollapsed,//收起
-    XPannelPositionPartiallyRevealed, //部分展开
-    XPannelPositionOpen,//全部展开
-    XPannelPositionClosed, //不在可视范围
+typedef NS_ENUM(NSUInteger, AYPannelPosition) {
+    AYPannelPositionCollapsed,//收起
+    AYPannelPositionPartiallyRevealed, //部分展开
+    AYPannelPositionOpen,//全部展开
+    AYPannelPositionClosed, //不在可视范围
 };
 
 static CGFloat const kXPannelDefaultCollapsedHeight = 68.0f;
 static CGFloat const kXPannelDefaultPartialRevealHeight = 264.0f;
 
 @class AYPannelViewController;
+@protocol AYDrawerScrollViewDelegate;
 
 @protocol AYPannelViewControllerDelegate
 - (void)drawerPositionDidChange:(AYPannelViewController *)drawer;
 @end
 
-@interface AYPannelViewController : UIViewController
 
-@property (nonatomic, assign) XPannelPosition currentPosition;
+@interface AYPannelViewController : UIViewController <AYDrawerScrollViewDelegate>
+
+@property (nonatomic, assign) AYPannelPosition currentPosition;
 @property (nonatomic, assign) BOOL shouldScrollDrawerScrollView;
 - (instancetype)initWithPrimaryContentViewController:(UIViewController *)primaryContentViewController
                          drawerContentViewController:(UIViewController *)drawerContentViewController;

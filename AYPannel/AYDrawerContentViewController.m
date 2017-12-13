@@ -7,6 +7,7 @@
 //
 
 #import "AYDrawerContentViewController.h"
+#import "AYPannelViewController.h"
 
 @interface AYDrawerContentViewController () <UITableViewDataSource, UITableViewDelegate>
 @property (nonatomic, strong) UIView *headerView;
@@ -33,6 +34,7 @@
     self.headerView.frame = CGRectMake(0, 0, self.view.bounds.size.width, 60);
     self.tableView.frame = CGRectMake(0, 60, self.view.bounds.size.width, self.view.bounds.size.height - 60);
     self.tableView.backgroundColor = [UIColor yellowColor];
+    
 
 }
 #pragma mark - UITableViewDataSource
@@ -74,7 +76,7 @@
 
 #pragma mark - AYPannelViewControllerDelegate
 - (void)drawerPositionDidChange:(AYPannelViewController *)drawer {
-    if (drawer.currentPosition == XPannelPositionOpen) {
+    if (drawer.currentPosition == AYPannelPositionOpen) {
         [self.tableView setScrollEnabled:YES];
     } else {
         [self.tableView setScrollEnabled:NO];
@@ -82,21 +84,6 @@
 }
 
 - (void)scrollViewDidScroll:(UIScrollView *)scrollView {
-    
-    if (CGPointEqualToPoint(self.tableView.contentOffset, CGPointZero)) {
-        
-        if ([self.parentViewController isKindOfClass:[AYPannelViewController class]]) {
-            AYPannelViewController *pannel = (AYPannelViewController *)self.parentViewController;
-            pannel.shouldScrollDrawerScrollView = YES;
-            [self.tableView setScrollEnabled:NO];
-
-        }
-    } else {
-        if ([self.parentViewController isKindOfClass:[AYPannelViewController class]]) {
-            AYPannelViewController *pannel = (AYPannelViewController *)self.parentViewController;
-            pannel.shouldScrollDrawerScrollView = NO;
-            [self.tableView setScrollEnabled:YES];
-        }
-    }
+    [self.drawerScrollDelegate drawerScrollViewDidScroll:scrollView];
 }
 @end
