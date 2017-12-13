@@ -34,8 +34,6 @@
     self.headerView.frame = CGRectMake(0, 0, self.view.bounds.size.width, 60);
     self.tableView.frame = CGRectMake(0, 60, self.view.bounds.size.width, self.view.bounds.size.height - 60);
     self.tableView.backgroundColor = [UIColor yellowColor];
-    
-
 }
 #pragma mark - UITableViewDataSource
 - (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView {

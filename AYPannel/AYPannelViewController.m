@@ -13,6 +13,7 @@
 static CGFloat kAYDefaultCollapsedHeight = 68.0f;
 static CGFloat kAYDefaultPartialRevealHeight = 264.0f;
 static CGFloat kAYTopInset = 20.0f;
+static CGFloat kAYBounceOverflowMargin = 20.0f;
 
 
 @interface AYPannelViewController () <UIScrollViewDelegate, UIGestureRecognizerDelegate, AYPassthroughScrollViewDelegate>
@@ -69,21 +70,40 @@ static CGFloat kAYTopInset = 20.0f;
     
     [super viewDidLayoutSubviews];
     
+    
     [self.primaryContentContainer addSubview:self.primaryContentViewController.view];
     [self.primaryContentContainer sendSubviewToBack:self.primaryContentViewController.view];
     
     [self.drawerContentContainer addSubview:self.drawerContentViewController.view];
     [self.drawerContentContainer sendSubviewToBack:self.drawerContentViewController.view];
-
     
-    self.drawerScrollView.frame = CGRectMake(0, kAYTopInset, self.view.bounds.size.width, self.view.bounds.size.height);
-
     self.primaryContentContainer.frame = self.view.bounds;
     
-    self.drawerContentContainer.frame = CGRectMake(0, self.drawerScrollView.bounds.size.height - [self collapsedHeight], self.view.bounds.size.width, self.view.bounds.size.height);
-
+    CGFloat safeAreaTopInset;
+    CGFloat safeAreaBottomInset;
     
-    self.drawerScrollView.contentSize = CGSizeMake(self.view.bounds.size.width, 2 * self.drawerScrollView.frame.size.height - [self collapsedHeight] - self.view.safeAreaInsets.bottom);
+    if (@available(iOS 11.0, *)) {
+        safeAreaTopInset = self.view.safeAreaInsets.top;
+        safeAreaBottomInset = self.view.safeAreaInsets.bottom;
+    } else {
+        safeAreaTopInset = self.topLayoutGuide.length;
+        safeAreaBottomInset = self.bottomLayoutGuide.length;
+    }
+    
+    if (@available(iOS 11.0, *)) {
+        self.drawerScrollView.contentInsetAdjustmentBehavior = UIScrollViewContentInsetAdjustmentAlways;
+    } else {
+        self.automaticallyAdjustsScrollViewInsets = NO;
+        self.drawerScrollView.contentInset = UIEdgeInsetsMake(0, 0, self.bottomLayoutGuide.length, 0);
+    }
+    
+    CGFloat lowestStop = [self collapsedHeight];
+    self.drawerScrollView.frame = CGRectMake(0, kAYTopInset + safeAreaTopInset, self.view.bounds.size.width, self.view.bounds.size.height - kAYTopInset - safeAreaTopInset);
+    
+    self.drawerContentContainer.frame = CGRectMake(0, self.drawerScrollView.bounds.size.height - lowestStop, self.drawerScrollView.bounds.size.width, self.drawerScrollView.bounds.size.height + kAYBounceOverflowMargin);
+    
+    self.drawerScrollView.contentSize = CGSizeMake(self.drawerScrollView.bounds.size.width, (self.drawerScrollView.bounds.size.height - lowestStop) + self.drawerScrollView.bounds.size.height - safeAreaBottomInset);
+    
     self.drawerScrollView.transform = CGAffineTransformIdentity;
     self.drawerContentContainer.transform = self.drawerScrollView.transform;
     
