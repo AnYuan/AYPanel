@@ -23,6 +23,10 @@ static CGFloat const kXPannelDefaultPartialRevealHeight = 264.0f;
 //通知外界drawerPosition发生变化
 @protocol AYPannelViewControllerDelegate
 - (void)drawerPositionDidChange:(AYPannelViewController *)drawer;
+
+@optional
+- (CGFloat)collapsedDrawerHeight;
+- (CGFloat)partialRevealDrawerHeight;
 @end
 
 //Drawer 滚动回调
@@ -35,5 +39,5 @@ static CGFloat const kXPannelDefaultPartialRevealHeight = 264.0f;
 @property (nonatomic, assign) AYPannelPosition currentPosition;
 @property (nonatomic, assign) BOOL shouldScrollDrawerScrollView;
 - (instancetype)initWithPrimaryContentViewController:(UIViewController *)primaryContentViewController
-                         drawerContentViewController:(UIViewController *)drawerContentViewController;
+                         drawerContentViewController:(UIViewController  <AYPannelViewControllerDelegate> *)drawerContentViewController;
 @end

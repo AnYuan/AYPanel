@@ -64,6 +64,14 @@
     }
 }
 
+- (CGFloat)collapsedDrawerHeight {
+    return kXPannelDefaultCollapsedHeight;
+}
+
+- (CGFloat)partialRevealDrawerHeight {
+    return kXPannelDefaultPartialRevealHeight;
+}
+
 #pragma mark - UIScrollViewDelegate
 - (void)scrollViewDidScroll:(UIScrollView *)scrollView {
     [self.drawerScrollDelegate drawerScrollViewDidScroll:scrollView];
