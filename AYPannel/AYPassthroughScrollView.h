@@ -10,7 +10,7 @@
 
 @class AYPassthroughScrollView;
 
-@protocol PulleyPassthroughScrollViewDelegate
+@protocol AYPassthroughScrollViewDelegate
 
 - (BOOL)shouldTouchPassthroughScrollView:(AYPassthroughScrollView *)scrollView
                                    point:(CGPoint)point;
@@ -20,5 +20,5 @@
 @end
 
 @interface AYPassthroughScrollView : UIScrollView
-@property (nonatomic, weak) id<PulleyPassthroughScrollViewDelegate> touchDelegate;
+@property (nonatomic, weak) id<AYPassthroughScrollViewDelegate> touchDelegate;
 @end

@@ -22,17 +22,10 @@
     self.xPannelViewController = [[AYPannelViewController alloc] init];
     
     [self addChildViewController:self.xPannelViewController];
-    self.xPannelViewController.view.frame = CGRectMake(0, 10, self.view.frame.size.width, self.view.frame.size.height - 10);
+    self.xPannelViewController.view.frame = self.view.bounds;
     [self.view addSubview:self.xPannelViewController.view];
     
 }
-
-
-- (void)didReceiveMemoryWarning {
-    [super didReceiveMemoryWarning];
-    // Dispose of any resources that can be recreated.
-}
-
 
 @end
 

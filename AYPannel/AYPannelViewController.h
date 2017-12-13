@@ -20,5 +20,4 @@ static CGFloat const kXPannelDefaultPartialRevealHeight = 264.0f;
 
 
 @interface AYPannelViewController : UIViewController
-
 @end

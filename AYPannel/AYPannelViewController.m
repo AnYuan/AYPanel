@@ -12,7 +12,7 @@
 static CGFloat kAYDefaultCollapsedHeight = 68.0;
 static CGFloat kAYDefaultPartialRevealHeight = 264.0;
 
-@interface AYPannelViewController () <UIScrollViewDelegate, UITableViewDataSource, UITableViewDelegate, UIGestureRecognizerDelegate>
+@interface AYPannelViewController () <UIScrollViewDelegate, UITableViewDataSource, UITableViewDelegate, UIGestureRecognizerDelegate, AYPassthroughScrollViewDelegate>
 @property (nonatomic, strong) UIView *drawerContentContainer;
 @property (nonatomic, strong) AYPassthroughScrollView *drawerScrollView;
 @property (nonatomic, strong) UIView *headerView;
@@ -22,6 +22,10 @@ static CGFloat kAYDefaultPartialRevealHeight = 264.0;
 
 @property (nonatomic, strong) UIPanGestureRecognizer *pan;
 @property (nonatomic, assign) BOOL shouldScrollDrawerScrollView;
+
+@property (nonatomic, strong) UIView *primaryContentContainer;
+@property (nonatomic, strong) UISwitch *primarySwitch;
+
 @end
 
 @implementation AYPannelViewController
@@ -33,6 +37,7 @@ static CGFloat kAYDefaultPartialRevealHeight = 264.0;
     
     self.lastDragTargetContentOffSet = CGPointZero;
     
+    [self.view addSubview:self.primaryContentContainer];
     [self.view addSubview:self.drawerScrollView];
     
     [self.drawerContentContainer addSubview:self.headerView];
@@ -45,6 +50,7 @@ static CGFloat kAYDefaultPartialRevealHeight = 264.0;
     self.drawerScrollView.showsHorizontalScrollIndicator = NO;
     self.drawerScrollView.bounces = NO;
     self.drawerScrollView.decelerationRate = UIScrollViewDecelerationRateFast;
+    self.drawerScrollView.touchDelegate = self;
     
     [self.tableView setScrollEnabled:NO];
     self.tableView.bounces = NO;
@@ -54,6 +60,8 @@ static CGFloat kAYDefaultPartialRevealHeight = 264.0;
     self.pan = [[UIPanGestureRecognizer alloc] initWithTarget:self action:@selector(panGestureRecognizerAction:)];
     self.pan.delegate = self;
     [self.drawerScrollView addGestureRecognizer:self.pan];
+    
+    self.view.backgroundColor = [UIColor whiteColor];
 }
 
 - (void)viewDidLayoutSubviews {
@@ -81,6 +89,16 @@ static CGFloat kAYDefaultPartialRevealHeight = 264.0;
         _drawerContentContainer.backgroundColor = [UIColor blueColor];
     }
     return _drawerContentContainer;
+}
+
+- (UIView *)primaryContentContainer {
+    if (!_primaryContentContainer) {
+        _primaryContentContainer = [[UIView alloc] initWithFrame:self.view.bounds];
+        _primarySwitch = [[UISwitch alloc] initWithFrame:CGRectMake(10, 100, 50, 50)];
+        [_primaryContentContainer addSubview:_primarySwitch];
+        _primaryContentContainer.backgroundColor = [UIColor blueColor];
+    }
+    return _primaryContentContainer;
 }
 
 - (AYPassthroughScrollView *)drawerScrollView {
@@ -130,7 +148,7 @@ static CGFloat kAYDefaultPartialRevealHeight = 264.0;
 
 - (void)scrollViewDidScroll:(UIScrollView *)scrollView {
     
-//    NSLog(@"scroll view is %@", scrollView);
+    NSLog(@"scroll view is %@", scrollView);
     
     if (scrollView == self.drawerScrollView) {
 //        NSLog(@"scrollView did scroll");
@@ -138,7 +156,7 @@ static CGFloat kAYDefaultPartialRevealHeight = 264.0;
 
         
     } else if (scrollView == self.tableView) {
-        NSLog(@"scroll view is %f", self.tableView.contentOffset.y);
+        NSLog(@"table view is %f", self.tableView.contentOffset.y);
         if (CGPointEqualToPoint(self.tableView.contentOffset, CGPointZero) && self.drawerScrollView.contentOffset.y > kAYDefaultCollapsedHeight) {
             [self.tableView setScrollEnabled:NO];
 //            self.tableView.canCancelContentTouches = NO;
@@ -185,7 +203,6 @@ static CGFloat kAYDefaultPartialRevealHeight = 264.0;
     if (scrollView == self.drawerScrollView) {
         self.lastDragTargetContentOffSet = CGPointMake(targetContentOffset->x, targetContentOffset->y);
         *targetContentOffset = scrollView.contentOffset;
-        NSLog(@"######### last drag target content offset is %f", self.lastDragTargetContentOffSet.y);
     }
 }
 
@@ -216,7 +233,7 @@ static CGFloat kAYDefaultPartialRevealHeight = 264.0;
     }];
 }
 
-#pragma UIPanGestureRecognizer
+#pragma mark - UIPanGestureRecognizer
 - (BOOL)gestureRecognizer:(UIGestureRecognizer *)gestureRecognizer shouldRecognizeSimultaneouslyWithGestureRecognizer:(UIGestureRecognizer *)otherGestureRecognizer {
     return YES;
 }
@@ -261,4 +278,16 @@ static CGFloat kAYDefaultPartialRevealHeight = 264.0;
     }
 }
 
+#pragma mark - AYPassthroughScrollViewDelegate
+- (BOOL)shouldTouchPassthroughScrollView:(AYPassthroughScrollView *)scrollView
+                                   point:(CGPoint)point {
+
+    CGPoint p = [self.drawerContentContainer convertPoint:point fromView:scrollView];
+    return !CGRectContainsPoint(self.drawerContentContainer.bounds, p);
+}
+
+- (UIView *)viewToReceiveTouch:(AYPassthroughScrollView *)scrollView
+                         point:(CGPoint)point {
+    return self.primaryContentContainer;
+}
 @end
