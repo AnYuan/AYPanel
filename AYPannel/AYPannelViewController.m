@@ -24,12 +24,12 @@ static CGFloat kAYDefaultPartialRevealHeight = 264.0;
 @property (nonatomic, strong) UIView *primaryContentContainer;
 
 @property (nonatomic, strong) UIViewController *primaryContentViewController;
-@property (nonatomic, strong) UIViewController *drawerContentViewController;
+@property (nonatomic, strong) UIViewController <AYPannelViewControllerDelegate> *drawerContentViewController;
 @end
 
 @implementation AYPannelViewController
 
-- (instancetype)initWithPrimaryContentViewController:(UIViewController *)primaryContentViewController drawerContentViewController:(UIViewController *)drawerContentViewController {
+- (instancetype)initWithPrimaryContentViewController:(UIViewController *)primaryContentViewController drawerContentViewController:(UIViewController <AYPannelViewControllerDelegate> *)drawerContentViewController {
     self = [super init];
     if (self) {
         self.primaryContentViewController = primaryContentViewController;
@@ -40,14 +40,13 @@ static CGFloat kAYDefaultPartialRevealHeight = 264.0;
 
 #pragma mark - Life Cycle
 - (void)viewDidLoad {
+    
     [super viewDidLoad];
-    // Do any additional setup after loading the view.
     
     self.lastDragTargetContentOffSet = CGPointZero;
     
     [self.drawerScrollView addSubview:self.drawerContentContainer];
-//    self.drawerScrollView.delaysContentTouches = YES;
-//    self.drawerScrollView.canCancelContentTouches = YES;
+
     self.drawerScrollView.showsVerticalScrollIndicator = NO;
     self.drawerScrollView.showsHorizontalScrollIndicator = NO;
     self.drawerScrollView.bounces = NO;
@@ -77,7 +76,6 @@ static CGFloat kAYDefaultPartialRevealHeight = 264.0;
     
     self.drawerScrollView.frame = CGRectMake(0, 20, self.view.bounds.size.width, self.view.bounds.size.height);
 
-    
     self.primaryContentContainer.frame = self.view.bounds;
     
     self.drawerContentContainer.frame = CGRectMake(0, self.drawerScrollView.bounds.size.height - 80, self.view.bounds.size.width, self.view.bounds.size.height);
@@ -98,7 +96,7 @@ static CGFloat kAYDefaultPartialRevealHeight = 264.0;
     [self addChildViewController:_primaryContentViewController];
 }
 
-- (void)setDrawerContentViewController:(UIViewController *)drawerContentViewController {
+- (void)setDrawerContentViewController:(UIViewController <AYPannelViewControllerDelegate>*)drawerContentViewController {
     if (!drawerContentViewController) { return; }
     _drawerContentViewController = drawerContentViewController;
     [self addChildViewController:_drawerContentViewController];
@@ -189,10 +187,9 @@ static CGFloat kAYDefaultPartialRevealHeight = 264.0;
     
     self.isAnimatingDrawerPosition = YES;
     self.currentPosition = position;
-    if ([self.drawerContentViewController respondsToSelector:@selector(drawerPositionDidChange:)]) {
-        id<AYPannelViewControllerDelegate> delegate = (id<AYPannelViewControllerDelegate>)self.drawerContentViewController;
-        [delegate drawerPositionDidChange:self];
-    }
+    //通知外部位置变化
+    [self.drawerContentViewController drawerPositionDidChange:self];
+    
     __weak typeof (self) weakSelf = self;
     [UIView animateWithDuration:0.3 delay:0.0 usingSpringWithDamping:0.75 initialSpringVelocity:0.0 options:UIViewAnimationOptionCurveEaseInOut animations:^{
         [weakSelf.drawerScrollView setContentOffset:CGPointMake(0, stopToMoveTo - lowestStop) animated:NO];
@@ -208,11 +205,13 @@ static CGFloat kAYDefaultPartialRevealHeight = 264.0;
 
 - (void)panGestureRecognizerAction:(UIPanGestureRecognizer *)getsutre {
     
-    if (self.shouldScrollDrawerScrollView && getsutre.state == UIGestureRecognizerStateChanged) {
+    if (!self.shouldScrollDrawerScrollView) { return; }
+    
+    if (getsutre.state == UIGestureRecognizerStateChanged) {
         CGPoint old = [getsutre translationInView:self.drawerScrollView];
         CGPoint p = CGPointMake(0, self.drawerScrollView.frame.size.height - fabs(old.y) - 80);
         [self.drawerScrollView setContentOffset:p];
-    } else if (self.shouldScrollDrawerScrollView && getsutre.state == UIGestureRecognizerStateEnded) {
+    } else if (getsutre.state == UIGestureRecognizerStateEnded) {
         self.shouldScrollDrawerScrollView = NO;
         CGFloat lowestStop = kAYDefaultCollapsedHeight;
         CGFloat distanceFromBottomOfView = self.drawerScrollView.frame.size.height - lowestStop - [getsutre translationInView:self.drawerScrollView].y;
@@ -245,8 +244,8 @@ static CGFloat kAYDefaultPartialRevealHeight = 264.0;
 #pragma mark - AYDrawerScrollViewDelegate
 
 - (void)drawerScrollViewDidScroll:(UIScrollView *)scrollView {
+    //当drawer中的scroll view 的contentOffset.y 为 0时，触发drawerScrollView滚动
     if (CGPointEqualToPoint(scrollView.contentOffset, CGPointZero)) {
-        
         self.shouldScrollDrawerScrollView = YES;
         [scrollView setScrollEnabled:NO];
         

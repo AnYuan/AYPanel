@@ -19,12 +19,16 @@ static CGFloat const kXPannelDefaultCollapsedHeight = 68.0f;
 static CGFloat const kXPannelDefaultPartialRevealHeight = 264.0f;
 
 @class AYPannelViewController;
-@protocol AYDrawerScrollViewDelegate;
 
+//通知外界drawerPosition发生变化
 @protocol AYPannelViewControllerDelegate
 - (void)drawerPositionDidChange:(AYPannelViewController *)drawer;
 @end
 
+//Drawer 滚动回调
+@protocol AYDrawerScrollViewDelegate
+- (void)drawerScrollViewDidScroll:(UIScrollView *)scrollView;
+@end
 
 @interface AYPannelViewController : UIViewController <AYDrawerScrollViewDelegate>
 

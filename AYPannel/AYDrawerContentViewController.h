@@ -12,9 +12,6 @@
 
 @protocol AYPannelViewControllerDelegate;
 
-@protocol AYDrawerScrollViewDelegate
-- (void)drawerScrollViewDidScroll:(UIScrollView *)scrollView;
-@end
 
 
 @interface AYDrawerContentViewController : UIViewController <AYPannelViewControllerDelegate>

@@ -55,6 +55,21 @@
     return 80;
 }
 
+#pragma mark - AYPannelViewControllerDelegate
+- (void)drawerPositionDidChange:(AYPannelViewController *)drawer {
+    if (drawer.currentPosition == AYPannelPositionOpen) {
+        [self.tableView setScrollEnabled:YES];
+    } else {
+        [self.tableView setScrollEnabled:NO];
+    }
+}
+
+#pragma mark - UIScrollViewDelegate
+- (void)scrollViewDidScroll:(UIScrollView *)scrollView {
+    [self.drawerScrollDelegate drawerScrollViewDidScroll:scrollView];
+}
+
+
 #pragma mark - Getter
 
 - (UITableView *)tableView {
@@ -72,18 +87,5 @@
         _headerView.backgroundColor = [UIColor redColor];
     }
     return _headerView;
-}
-
-#pragma mark - AYPannelViewControllerDelegate
-- (void)drawerPositionDidChange:(AYPannelViewController *)drawer {
-    if (drawer.currentPosition == AYPannelPositionOpen) {
-        [self.tableView setScrollEnabled:YES];
-    } else {
-        [self.tableView setScrollEnabled:NO];
-    }
-}
-
-- (void)scrollViewDidScroll:(UIScrollView *)scrollView {
-    [self.drawerScrollDelegate drawerScrollViewDidScroll:scrollView];
 }
 @end
