@@ -8,6 +8,8 @@
 
 #import "ViewController.h"
 #import "AYPannelViewController.h"
+#import "AYPrimaryContentViewController.h"
+#import "AYDrawerContentViewController.h"
 
 @interface ViewController ()
 @property (nonatomic, strong) AYPannelViewController *xPannelViewController;
@@ -19,7 +21,7 @@
     [super viewDidLoad];
     self.view.backgroundColor = [UIColor greenColor];
     
-    self.xPannelViewController = [[AYPannelViewController alloc] init];
+    self.xPannelViewController = [[AYPannelViewController alloc] initWithPrimaryContentViewController:[AYPrimaryContentViewController new] drawerContentViewController:[AYDrawerContentViewController new]];
     
     [self addChildViewController:self.xPannelViewController];
     self.xPannelViewController.view.frame = self.view.bounds;

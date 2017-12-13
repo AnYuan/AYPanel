@@ -12,23 +12,30 @@
 static CGFloat kAYDefaultCollapsedHeight = 68.0;
 static CGFloat kAYDefaultPartialRevealHeight = 264.0;
 
-@interface AYPannelViewController () <UIScrollViewDelegate, UITableViewDataSource, UITableViewDelegate, UIGestureRecognizerDelegate, AYPassthroughScrollViewDelegate>
+@interface AYPannelViewController () <UIScrollViewDelegate, UIGestureRecognizerDelegate, AYPassthroughScrollViewDelegate>
 @property (nonatomic, strong) UIView *drawerContentContainer;
 @property (nonatomic, strong) AYPassthroughScrollView *drawerScrollView;
-@property (nonatomic, strong) UIView *headerView;
-@property (nonatomic, strong) UITableView *tableView;
 @property (nonatomic, assign) CGPoint lastDragTargetContentOffSet;
 @property (nonatomic, assign) BOOL isAnimatingDrawerPosition;
 
 @property (nonatomic, strong) UIPanGestureRecognizer *pan;
-@property (nonatomic, assign) BOOL shouldScrollDrawerScrollView;
 
 @property (nonatomic, strong) UIView *primaryContentContainer;
-@property (nonatomic, strong) UISwitch *primarySwitch;
 
+@property (nonatomic, strong) UIViewController *primaryContentViewController;
+@property (nonatomic, strong) UIViewController *drawerContentViewController;
 @end
 
 @implementation AYPannelViewController
+
+- (instancetype)initWithPrimaryContentViewController:(UIViewController *)primaryContentViewController drawerContentViewController:(UIViewController *)drawerContentViewController {
+    self = [super init];
+    if (self) {
+        self.primaryContentViewController = primaryContentViewController;
+        self.drawerContentViewController = drawerContentViewController;
+    }
+    return self;
+}
 
 #pragma mark - Life Cycle
 - (void)viewDidLoad {
@@ -37,11 +44,8 @@ static CGFloat kAYDefaultPartialRevealHeight = 264.0;
     
     self.lastDragTargetContentOffSet = CGPointZero;
     
-    [self.view addSubview:self.primaryContentContainer];
-    [self.view addSubview:self.drawerScrollView];
-    
-    [self.drawerContentContainer addSubview:self.headerView];
-    [self.drawerContentContainer addSubview:self.tableView];
+//    [self.drawerContentContainer addSubview:self.headerView];
+//    [self.drawerContentContainer addSubview:self.tableView];
     
     [self.drawerScrollView addSubview:self.drawerContentContainer];
 //    self.drawerScrollView.delaysContentTouches = YES;
@@ -52,25 +56,31 @@ static CGFloat kAYDefaultPartialRevealHeight = 264.0;
     self.drawerScrollView.decelerationRate = UIScrollViewDecelerationRateFast;
     self.drawerScrollView.touchDelegate = self;
     
-    [self.tableView setScrollEnabled:NO];
-    self.tableView.bounces = NO;
-
-    [self.tableView registerClass:[UITableViewCell class] forCellReuseIdentifier:@"table view cell"];
     
     self.pan = [[UIPanGestureRecognizer alloc] initWithTarget:self action:@selector(panGestureRecognizerAction:)];
     self.pan.delegate = self;
     [self.drawerScrollView addGestureRecognizer:self.pan];
     
-    self.view.backgroundColor = [UIColor whiteColor];
+    [self.view addSubview:self.primaryContentContainer];
+    [self.view addSubview:self.drawerScrollView];
+
 }
 
 - (void)viewDidLayoutSubviews {
-    self.headerView.frame = CGRectMake(0, 0, self.view.bounds.size.width, 60);
-    self.tableView.frame = CGRectMake(0, 60, self.view.bounds.size.width, self.view.bounds.size.height - 60);
-    self.tableView.backgroundColor = [UIColor yellowColor];
+    
+    [super viewDidLayoutSubviews];
+    
+    [self.primaryContentContainer addSubview:self.primaryContentViewController.view];
+    [self.primaryContentContainer sendSubviewToBack:self.primaryContentViewController.view];
+    
+    [self.drawerContentContainer addSubview:self.drawerContentViewController.view];
+    [self.drawerContentContainer sendSubviewToBack:self.drawerContentViewController.view];
+
     
     self.drawerScrollView.frame = CGRectMake(0, 20, self.view.bounds.size.width, self.view.bounds.size.height);
 
+    
+    self.primaryContentContainer.frame = self.view.bounds;
     
     self.drawerContentContainer.frame = CGRectMake(0, self.drawerScrollView.bounds.size.height - 80, self.view.bounds.size.width, self.view.bounds.size.height);
 
@@ -83,6 +93,19 @@ static CGFloat kAYDefaultPartialRevealHeight = 264.0;
 }
 
 #pragma mark - Getter and Setter
+- (void)setPrimaryContentViewController:(UIViewController *)primaryContentViewController {
+    
+    if (!primaryContentViewController) { return; }
+    _primaryContentViewController = primaryContentViewController;
+    [self addChildViewController:_primaryContentViewController];
+}
+
+- (void)setDrawerContentViewController:(UIViewController *)drawerContentViewController {
+    if (!drawerContentViewController) { return; }
+    _drawerContentViewController = drawerContentViewController;
+    [self addChildViewController:_drawerContentViewController];
+}
+
 - (UIView *)drawerContentContainer {
     if (!_drawerContentContainer) {
         _drawerContentContainer = [[UIView alloc] initWithFrame:self.view.bounds];
@@ -94,9 +117,7 @@ static CGFloat kAYDefaultPartialRevealHeight = 264.0;
 - (UIView *)primaryContentContainer {
     if (!_primaryContentContainer) {
         _primaryContentContainer = [[UIView alloc] initWithFrame:self.view.bounds];
-        _primarySwitch = [[UISwitch alloc] initWithFrame:CGRectMake(10, 100, 50, 50)];
-        [_primaryContentContainer addSubview:_primarySwitch];
-        _primaryContentContainer.backgroundColor = [UIColor blueColor];
+        _primaryContentContainer.backgroundColor = [UIColor whiteColor];
     }
     return _primaryContentContainer;
 }
@@ -109,59 +130,11 @@ static CGFloat kAYDefaultPartialRevealHeight = 264.0;
     return _drawerScrollView;
 }
 
-- (UITableView *)tableView {
-    if (!_tableView) {
-        _tableView = [[UITableView alloc] initWithFrame:self.view.bounds style:UITableViewStylePlain];
-        _tableView.dataSource = self;
-        _tableView.delegate = self;
-    }
-    return _tableView;
-}
-
-- (UIView *)headerView {
-    if (!_headerView) {
-        _headerView = [[UIView alloc] init];
-        _headerView.backgroundColor = [UIColor redColor];
-    }
-    return _headerView;
-}
-
-#pragma mark - UITableViewDataSource
-- (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView {
-    return 1;
-}
-
-- (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
-    return 30;
-}
-
-- (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
-    return [tableView dequeueReusableCellWithIdentifier:@"table view cell"];
-}
-
-#pragma mark - UITableViewDelegate
-- (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath {
-    return 80;
-}
-
 #pragma mark - UIScrollViewDelegate
 
 - (void)scrollViewDidScroll:(UIScrollView *)scrollView {
     
-    if (scrollView == self.drawerScrollView) {
-//        NSLog(@"scrollView did scroll");
-//        self.shouldScrollDrawerScrollView = NO;
-
-    } else if (scrollView == self.tableView) {
-    
-        if (CGPointEqualToPoint(self.tableView.contentOffset, CGPointZero) && self.drawerScrollView.contentOffset.y > kAYDefaultCollapsedHeight) {
-            [self.tableView setScrollEnabled:NO];
-            self.shouldScrollDrawerScrollView = YES;
-        } else {
-            [self.tableView setScrollEnabled:YES];
-            self.shouldScrollDrawerScrollView = NO;
-        }
-    }
+//    NSLog(@"scroll view is %@", scrollView);
 }
 
 - (void)scrollViewDidEndDragging:(UIScrollView *)scrollView willDecelerate:(BOOL)decelerate {
@@ -217,12 +190,14 @@ static CGFloat kAYDefaultPartialRevealHeight = 264.0;
     }
     
     self.isAnimatingDrawerPosition = YES;
+    self.currentPosition = position;
+    if ([self.drawerContentViewController respondsToSelector:@selector(drawerPositionDidChange:)]) {
+        id<AYPannelViewControllerDelegate> delegate = (id<AYPannelViewControllerDelegate>)self.drawerContentViewController;
+        [delegate drawerPositionDidChange:self];
+    }
     __weak typeof (self) weakSelf = self;
     [UIView animateWithDuration:0.3 delay:0.0 usingSpringWithDamping:0.75 initialSpringVelocity:0.0 options:UIViewAnimationOptionCurveEaseInOut animations:^{
         [weakSelf.drawerScrollView setContentOffset:CGPointMake(0, stopToMoveTo - lowestStop) animated:NO];
-        
-        [weakSelf.tableView setScrollEnabled:position == XPannelPositionOpen];
-        
     } completion:^(BOOL finished) {
         weakSelf.isAnimatingDrawerPosition = NO;
     }];

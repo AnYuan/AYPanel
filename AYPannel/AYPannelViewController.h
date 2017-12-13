@@ -18,6 +18,16 @@ typedef NS_ENUM(NSUInteger, XPannelPosition) {
 static CGFloat const kXPannelDefaultCollapsedHeight = 68.0f;
 static CGFloat const kXPannelDefaultPartialRevealHeight = 264.0f;
 
+@class AYPannelViewController;
+
+@protocol AYPannelViewControllerDelegate
+- (void)drawerPositionDidChange:(AYPannelViewController *)drawer;
+@end
 
 @interface AYPannelViewController : UIViewController
+
+@property (nonatomic, assign) XPannelPosition currentPosition;
+@property (nonatomic, assign) BOOL shouldScrollDrawerScrollView;
+- (instancetype)initWithPrimaryContentViewController:(UIViewController *)primaryContentViewController
+                         drawerContentViewController:(UIViewController *)drawerContentViewController;
 @end

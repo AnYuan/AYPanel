@@ -1,0 +1,14 @@
+//
+//  AYDrawerContentViewController.h
+//  AYPannel
+//
+//  Created by anyuan on 13/12/2017.
+//  Copyright © 2017 anyuan. All rights reserved.
+//
+
+#import <UIKit/UIKit.h>
+
+#import "AYPannelViewController.h"
+
+@interface AYDrawerContentViewController : UIViewController <AYPannelViewControllerDelegate>
+@end

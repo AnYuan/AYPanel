@@ -15,6 +15,8 @@
 		D1CF0DAE1FDFBD3B0081DDD4 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = D1CF0DAD1FDFBD3B0081DDD4 /* main.m */; };
 		D1CF0DB81FDFBD5C0081DDD4 /* AYPassthroughScrollView.m in Sources */ = {isa = PBXBuildFile; fileRef = D1CF0DB41FDFBD5C0081DDD4 /* AYPassthroughScrollView.m */; };
 		D1CF0DB91FDFBD5C0081DDD4 /* AYPannelViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = D1CF0DB61FDFBD5C0081DDD4 /* AYPannelViewController.m */; };
+		D1CF0DBC1FE10BD80081DDD4 /* AYDrawerContentViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = D1CF0DBB1FE10BD80081DDD4 /* AYDrawerContentViewController.m */; };
+		D1CF0DBF1FE10E080081DDD4 /* AYPrimaryContentViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = D1CF0DBE1FE10E080081DDD4 /* AYPrimaryContentViewController.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -32,6 +34,10 @@
 		D1CF0DB51FDFBD5C0081DDD4 /* AYPannelViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AYPannelViewController.h; sourceTree = "<group>"; };
 		D1CF0DB61FDFBD5C0081DDD4 /* AYPannelViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = AYPannelViewController.m; sourceTree = "<group>"; };
 		D1CF0DB71FDFBD5C0081DDD4 /* AYPassthroughScrollView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AYPassthroughScrollView.h; sourceTree = "<group>"; };
+		D1CF0DBA1FE10BD80081DDD4 /* AYDrawerContentViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AYDrawerContentViewController.h; sourceTree = "<group>"; };
+		D1CF0DBB1FE10BD80081DDD4 /* AYDrawerContentViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AYDrawerContentViewController.m; sourceTree = "<group>"; };
+		D1CF0DBD1FE10E080081DDD4 /* AYPrimaryContentViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AYPrimaryContentViewController.h; sourceTree = "<group>"; };
+		D1CF0DBE1FE10E080081DDD4 /* AYPrimaryContentViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AYPrimaryContentViewController.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -68,6 +74,10 @@
 				D1CF0D9F1FDFBD3B0081DDD4 /* AppDelegate.m */,
 				D1CF0DA11FDFBD3B0081DDD4 /* ViewController.h */,
 				D1CF0DA21FDFBD3B0081DDD4 /* ViewController.m */,
+				D1CF0DBD1FE10E080081DDD4 /* AYPrimaryContentViewController.h */,
+				D1CF0DBE1FE10E080081DDD4 /* AYPrimaryContentViewController.m */,
+				D1CF0DBA1FE10BD80081DDD4 /* AYDrawerContentViewController.h */,
+				D1CF0DBB1FE10BD80081DDD4 /* AYDrawerContentViewController.m */,
 				D1CF0DB51FDFBD5C0081DDD4 /* AYPannelViewController.h */,
 				D1CF0DB61FDFBD5C0081DDD4 /* AYPannelViewController.m */,
 				D1CF0DB71FDFBD5C0081DDD4 /* AYPassthroughScrollView.h */,
@@ -153,7 +163,9 @@
 			buildActionMask = 2147483647;
 			files = (
 				D1CF0DB81FDFBD5C0081DDD4 /* AYPassthroughScrollView.m in Sources */,
+				D1CF0DBC1FE10BD80081DDD4 /* AYDrawerContentViewController.m in Sources */,
 				D1CF0DB91FDFBD5C0081DDD4 /* AYPannelViewController.m in Sources */,
+				D1CF0DBF1FE10E080081DDD4 /* AYPrimaryContentViewController.m in Sources */,
 				D1CF0DA31FDFBD3B0081DDD4 /* ViewController.m in Sources */,
 				D1CF0DAE1FDFBD3B0081DDD4 /* main.m in Sources */,
 				D1CF0DA01FDFBD3B0081DDD4 /* AppDelegate.m in Sources */,
