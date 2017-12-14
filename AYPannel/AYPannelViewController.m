@@ -14,17 +14,21 @@ static CGFloat kAYDefaultCollapsedHeight = 68.0f;
 static CGFloat kAYDefaultPartialRevealHeight = 264.0f;
 static CGFloat kAYTopInset = 20.0f;
 static CGFloat kAYBounceOverflowMargin = 20.0f;
+static CGFloat kAYDefaultDimmingOpacity = 0.5f;
 
 
 @interface AYPannelViewController () <UIScrollViewDelegate, UIGestureRecognizerDelegate, AYPassthroughScrollViewDelegate>
-@property (nonatomic, strong) UIView *drawerContentContainer;
-@property (nonatomic, strong) AYPassthroughScrollView *drawerScrollView;
 @property (nonatomic, assign) CGPoint lastDragTargetContentOffSet;
 @property (nonatomic, assign) BOOL isAnimatingDrawerPosition;
 
 @property (nonatomic, strong) UIPanGestureRecognizer *pan;
 
 @property (nonatomic, strong) UIView *primaryContentContainer;
+@property (nonatomic, strong) UIView *drawerContentContainer;
+@property (nonatomic, strong) AYPassthroughScrollView *drawerScrollView;
+
+@property (nonatomic, strong) UIView *backgroundDimmingView;
+@property (nonatomic, strong) UITapGestureRecognizer *tapGestureRecognizer;
 
 @property (nonatomic, strong) UIViewController *primaryContentViewController;
 @property (nonatomic, strong) UIViewController <AYPannelViewControllerDelegate> *drawerContentViewController;
@@ -62,6 +66,7 @@ static CGFloat kAYBounceOverflowMargin = 20.0f;
     [self.drawerScrollView addGestureRecognizer:self.pan];
     
     [self.view addSubview:self.primaryContentContainer];
+    [self.view addSubview:self.backgroundDimmingView];
     [self.view addSubview:self.drawerScrollView];
 
 }
@@ -104,8 +109,13 @@ static CGFloat kAYBounceOverflowMargin = 20.0f;
     
     self.drawerScrollView.contentSize = CGSizeMake(self.drawerScrollView.bounds.size.width, (self.drawerScrollView.bounds.size.height - lowestStop) + self.drawerScrollView.bounds.size.height - safeAreaBottomInset);
     
+    
+    self.backgroundDimmingView.frame = CGRectMake(0.0, 0.0, self.view.bounds.size.width, self.view.bounds.size.height + self.drawerScrollView.contentSize.height);
+    
     self.drawerScrollView.transform = CGAffineTransformIdentity;
     self.drawerContentContainer.transform = self.drawerScrollView.transform;
+    
+    [self.backgroundDimmingView setHidden:NO];
     
     [self setDrawerPosition:AYPannelPositionCollapsed animated:NO];
 }
@@ -114,7 +124,28 @@ static CGFloat kAYBounceOverflowMargin = 20.0f;
 
 - (void)scrollViewDidScroll:(UIScrollView *)scrollView {
     
-//    NSLog(@"scroll view is %@", scrollView);
+    
+    if (scrollView != self.drawerScrollView) { return; }
+    
+
+    CGFloat lowestStop = [self collapsedHeight];
+    if ((scrollView.contentOffset.y - [self bottomSafeArea]) > ([self partialRevealDrawerHeight] - lowestStop)) {
+        CGFloat fullRevealHeight = self.drawerScrollView.bounds.size.height;
+        CGFloat progress;
+        if (fullRevealHeight == [self partialRevealDrawerHeight]) {
+            progress = 1.0;
+        } else {
+            progress = (scrollView.contentOffset.y - ([self partialRevealDrawerHeight] - lowestStop)) / (fullRevealHeight - [self partialRevealDrawerHeight]);
+        }
+        
+        self.backgroundDimmingView.alpha = progress * kAYDefaultDimmingOpacity;
+        [self.backgroundDimmingView setUserInteractionEnabled:YES];
+    } else {
+        if (self.backgroundDimmingView.alpha >= 0.01) {
+            self.backgroundDimmingView.alpha = 0.0;
+            [self.backgroundDimmingView setUserInteractionEnabled:NO];
+        }
+    }
 }
 
 - (void)scrollViewDidEndDragging:(UIScrollView *)scrollView willDecelerate:(BOOL)decelerate {
@@ -222,6 +253,14 @@ static CGFloat kAYBounceOverflowMargin = 20.0f;
     }
 }
 
+- (void)dimmingTapGestureRecognizer:(UITapGestureRecognizer *)tapGesture {
+    if (tapGesture == self.tapGestureRecognizer) {
+        if (self.tapGestureRecognizer.state == UIGestureRecognizerStateEnded) {
+            [self setDrawerPosition:AYPannelPositionCollapsed animated:YES];
+        }
+    }
+}
+
 #pragma mark - AYDrawerScrollViewDelegate
 
 - (void)drawerScrollViewDidScroll:(UIScrollView *)scrollView {
@@ -289,6 +328,18 @@ static CGFloat kAYBounceOverflowMargin = 20.0f;
     return _drawerScrollView;
 }
 
+- (UIView *)backgroundDimmingView {
+    if (!_backgroundDimmingView) {
+        _backgroundDimmingView = [[UIView alloc] init];
+        [_backgroundDimmingView setUserInteractionEnabled:NO];
+        _backgroundDimmingView.alpha = 0.0;
+        _backgroundDimmingView.backgroundColor = [UIColor blackColor];
+        _tapGestureRecognizer = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(dimmingTapGestureRecognizer:)];
+        [_backgroundDimmingView addGestureRecognizer:_tapGestureRecognizer];
+    }
+    return _backgroundDimmingView;
+}
+
 - (CGFloat)collapsedHeight {
     CGFloat collapsedHeight = kAYDefaultCollapsedHeight;
     
@@ -305,6 +356,16 @@ static CGFloat kAYBounceOverflowMargin = 20.0f;
         partialRevealDrawerHeight = [self.drawerContentViewController partialRevealDrawerHeight];
     }
     return partialRevealDrawerHeight;
+}
+
+- (CGFloat)bottomSafeArea {
+    CGFloat safeAreaBottomInset;
+    if (@available(iOS 11.0, *)) {
+        safeAreaBottomInset = self.view.safeAreaInsets.bottom;
+    } else {
+        safeAreaBottomInset = self.bottomLayoutGuide.length;
+    }
+    return safeAreaBottomInset;
 }
 
 - (void)setCurrentPosition:(AYPannelPosition)currentPosition {

@@ -10,6 +10,6 @@ TODO:
 - [X] 与drawer内部scrollview(tableview, collectionview)解耦方便后续使用
 - [X] 外界可动态定制部分展示的高度
 - [X] 适配iPhone X
-- [ ] 黑色蒙层添加
+- [X] 黑色蒙层添加
 - [ ] 代码整理
 
