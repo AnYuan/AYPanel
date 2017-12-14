@@ -10,8 +10,9 @@
 #import "AYPassthroughScrollView.h"
 #import "AYDrawerContentViewController.h"
 
-static CGFloat kAYDefaultCollapsedHeight = 68.0f;
-static CGFloat kAYDefaultPartialRevealHeight = 264.0f;
+static CGFloat kAYDefaultCollapsedHeight = 68.0f; //默认收起大小
+static CGFloat kAYDefaultPartialRevealHeight = 264.0f; //默认部分展开大小
+
 static CGFloat kAYTopInset = 20.0f;
 static CGFloat kAYBounceOverflowMargin = 20.0f;
 static CGFloat kAYDefaultDimmingOpacity = 0.5f;
@@ -22,24 +23,24 @@ static CGFloat kAYDrawerCornerRadius = 13.0f;
 
 
 @interface AYPannelViewController () <UIScrollViewDelegate, UIGestureRecognizerDelegate, AYPassthroughScrollViewDelegate>
-@property (nonatomic, assign) CGPoint lastDragTargetContentOffSet;
+@property (nonatomic, assign) CGPoint lastDragTargetContentOffSet; //记录上次滑动位置
 @property (nonatomic, assign) BOOL isAnimatingDrawerPosition;
 
-@property (nonatomic, strong) UIPanGestureRecognizer *pan;
+@property (nonatomic, strong) UIPanGestureRecognizer *pan; //滑动手势
+@property (nonatomic, strong) UITapGestureRecognizer *tapGestureRecognizer; //点击手势，用于蒙层点击
 
-@property (nonatomic, strong) UIView *primaryContentContainer;
-@property (nonatomic, strong) UIView *drawerContentContainer;
-@property (nonatomic, strong) AYPassthroughScrollView *drawerScrollView;
-@property (nonatomic, strong) UIView *drawerShadowView;
+@property (nonatomic, strong) UIView *primaryContentContainer; //主要内容容器视图
+@property (nonatomic, strong) UIView *drawerContentContainer; //抽屉内容容器视图
+@property (nonatomic, strong) AYPassthroughScrollView *drawerScrollView; //抽屉滚动视图
+@property (nonatomic, strong) UIView *drawerShadowView; //阴影
 
-@property (nonatomic, strong) UIVisualEffectView *drawerBackgroundVisualEffectView;
+@property (nonatomic, strong) UIVisualEffectView *drawerBackgroundVisualEffectView; //毛玻璃效果
 
 
 @property (nonatomic, strong) UIView *backgroundDimmingView; //黑色蒙层
-@property (nonatomic, strong) UITapGestureRecognizer *tapGestureRecognizer;
 
-@property (nonatomic, strong) UIViewController *primaryContentViewController;
-@property (nonatomic, strong) UIViewController <AYPannelViewControllerDelegate> *drawerContentViewController;
+@property (nonatomic, strong) UIViewController *primaryContentViewController; //主视图VC
+@property (nonatomic, strong) UIViewController <AYPannelViewControllerDelegate> *drawerContentViewController; //抽屉视图VC
 @end
 
 @implementation AYPannelViewController
@@ -150,8 +151,11 @@ static CGFloat kAYDrawerCornerRadius = 13.0f;
     self.drawerContentContainer.transform = self.drawerScrollView.transform;
     self.drawerShadowView.transform = self.drawerScrollView.transform;
     
-    [self setDrawerPosition:AYPannelPositionCollapsed animated:NO];
+    [self p_maskBackgroundDimmingView];
+    
+    [self p_setDrawerPosition:AYPannelPositionCollapsed animated:NO];
 }
+
 
 #pragma mark - UIScrollViewDelegate
 
@@ -160,9 +164,9 @@ static CGFloat kAYDrawerCornerRadius = 13.0f;
     
     if (scrollView != self.drawerScrollView) { return; }
     
-
     CGFloat lowestStop = [self collapsedHeight];
-    if ((scrollView.contentOffset.y - [self bottomSafeArea]) > ([self partialRevealDrawerHeight] - lowestStop)) {
+    //蒙层颜色变化
+    if ((scrollView.contentOffset.y - [self p_bottomSafeArea]) > ([self partialRevealDrawerHeight] - lowestStop)) {
         CGFloat fullRevealHeight = self.drawerScrollView.bounds.size.height;
         CGFloat progress;
         if (fullRevealHeight == [self partialRevealDrawerHeight]) {
@@ -170,7 +174,6 @@ static CGFloat kAYDrawerCornerRadius = 13.0f;
         } else {
             progress = (scrollView.contentOffset.y - ([self partialRevealDrawerHeight] - lowestStop)) / (fullRevealHeight - [self partialRevealDrawerHeight]);
         }
-        
         self.backgroundDimmingView.alpha = progress * kAYDefaultDimmingOpacity;
         [self.backgroundDimmingView setUserInteractionEnabled:YES];
     } else {
@@ -179,6 +182,8 @@ static CGFloat kAYDrawerCornerRadius = 13.0f;
             [self.backgroundDimmingView setUserInteractionEnabled:NO];
         }
     }
+    
+    self.backgroundDimmingView.frame = [self p_backgroundDimmingViewFrameForDrawerPosition:scrollView.contentOffset.y + lowestStop];
 }
 
 - (void)scrollViewDidEndDragging:(UIScrollView *)scrollView willDecelerate:(BOOL)decelerate {
@@ -200,13 +205,13 @@ static CGFloat kAYDrawerCornerRadius = 13.0f;
         
         if (fabs(currentClosestStop - (self.drawerScrollView.frame.size.height)) <= FLT_EPSILON) {
             //open
-            [self setDrawerPosition:AYPannelPositionOpen animated:YES];
+            [self p_setDrawerPosition:AYPannelPositionOpen animated:YES];
         } else if (fabs(currentClosestStop - [self collapsedHeight]) <= FLT_EPSILON) {
             //collapsed
-            [self setDrawerPosition:AYPannelPositionCollapsed animated:YES];
+            [self p_setDrawerPosition:AYPannelPositionCollapsed animated:YES];
         } else {
             //partially revealed
-            [self setDrawerPosition:AYPannelPositionPartiallyRevealed animated:YES];
+            [self p_setDrawerPosition:AYPannelPositionPartiallyRevealed animated:YES];
         }
     }
 }
@@ -216,32 +221,6 @@ static CGFloat kAYDrawerCornerRadius = 13.0f;
         self.lastDragTargetContentOffSet = CGPointMake(targetContentOffset->x, targetContentOffset->y);
         *targetContentOffset = scrollView.contentOffset;
     }
-}
-
-- (void)setDrawerPosition:(AYPannelPosition)position
-                 animated:(BOOL)animated {
-    
-    CGFloat stopToMoveTo;
-    CGFloat lowestStop = [self collapsedHeight];
-    if (position == AYPannelPositionCollapsed) {
-        stopToMoveTo = lowestStop;
-    } else if (position == AYPannelPositionPartiallyRevealed) {
-        stopToMoveTo = [self partialRevealDrawerHeight];
-    } else if (position == AYPannelPositionOpen) {
-        stopToMoveTo = self.drawerScrollView.frame.size.height;
-    } else { //close
-        stopToMoveTo = 0.0f;
-    }
-    
-    self.isAnimatingDrawerPosition = YES;
-    self.currentPosition = position;
-    
-    __weak typeof (self) weakSelf = self;
-    [UIView animateWithDuration:0.3 delay:0.0 usingSpringWithDamping:0.75 initialSpringVelocity:0.0 options:UIViewAnimationOptionCurveEaseInOut animations:^{
-        [weakSelf.drawerScrollView setContentOffset:CGPointMake(0, stopToMoveTo - lowestStop) animated:NO];
-    } completion:^(BOOL finished) {
-        weakSelf.isAnimatingDrawerPosition = NO;
-    }];
 }
 
 #pragma mark - UIPanGestureRecognizer
@@ -275,21 +254,13 @@ static CGFloat kAYDrawerCornerRadius = 13.0f;
         
         if (fabs(currentClosestStop - (self.drawerScrollView.frame.size.height)) <= FLT_EPSILON) {
             //open
-            [self setDrawerPosition:AYPannelPositionOpen animated:YES];
+            [self p_setDrawerPosition:AYPannelPositionOpen animated:YES];
         } else if (fabs(currentClosestStop - [self collapsedHeight]) <= FLT_EPSILON) {
             //collapsed
-            [self setDrawerPosition:AYPannelPositionCollapsed animated:YES];
+            [self p_setDrawerPosition:AYPannelPositionCollapsed animated:YES];
         } else {
             //partially revealed
-            [self setDrawerPosition:AYPannelPositionPartiallyRevealed animated:YES];
-        }
-    }
-}
-
-- (void)dimmingTapGestureRecognizer:(UITapGestureRecognizer *)tapGesture {
-    if (tapGesture == self.tapGestureRecognizer) {
-        if (self.tapGestureRecognizer.state == UIGestureRecognizerStateEnded) {
-            [self setDrawerPosition:AYPannelPositionCollapsed animated:YES];
+            [self p_setDrawerPosition:AYPannelPositionPartiallyRevealed animated:YES];
         }
     }
 }
@@ -308,7 +279,6 @@ static CGFloat kAYDrawerCornerRadius = 13.0f;
     }
 }
 
-
 #pragma mark - AYPassthroughScrollViewDelegate
 - (BOOL)shouldTouchPassthroughScrollView:(AYPassthroughScrollView *)scrollView
                                    point:(CGPoint)point {
@@ -319,6 +289,9 @@ static CGFloat kAYDrawerCornerRadius = 13.0f;
 
 - (UIView *)viewToReceiveTouch:(AYPassthroughScrollView *)scrollView
                          point:(CGPoint)point {
+    if (self.currentPosition == AYPannelPositionOpen) {
+        return self.backgroundDimmingView;
+    }
     return self.primaryContentContainer;
 }
 
@@ -374,7 +347,7 @@ static CGFloat kAYDrawerCornerRadius = 13.0f;
         [_backgroundDimmingView setUserInteractionEnabled:NO];
         _backgroundDimmingView.alpha = 0.0;
         _backgroundDimmingView.backgroundColor = [UIColor blackColor];
-        _tapGestureRecognizer = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(dimmingTapGestureRecognizer:)];
+        _tapGestureRecognizer = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(p_dimmingTapGestureRecognizer:)];
         [_backgroundDimmingView addGestureRecognizer:_tapGestureRecognizer];
     }
     return _backgroundDimmingView;
@@ -407,7 +380,31 @@ static CGFloat kAYDrawerCornerRadius = 13.0f;
     return partialRevealDrawerHeight;
 }
 
-- (CGFloat)bottomSafeArea {
+- (void)setCurrentPosition:(AYPannelPosition)currentPosition {
+    _currentPosition = currentPosition;
+    //通知外部位置变化
+    [_drawerContentViewController drawerPositionDidChange:self];
+}
+
+#pragma mark - Private Mehtods
+
+- (void)p_maskBackgroundDimmingView {
+    CGFloat cutoutHeight = 2 * kAYDrawerCornerRadius;
+    CGFloat maskHeight = self.backgroundDimmingView.bounds.size.height - cutoutHeight - self.drawerScrollView.contentSize.height;
+    CGFloat maskWidth = self.backgroundDimmingView.bounds.size.width;
+    CGRect drawerRect = CGRectMake(0, maskHeight, maskWidth, self.drawerContentContainer.bounds.size.height);
+    
+    UIBezierPath *path = [UIBezierPath bezierPathWithRoundedRect:drawerRect byRoundingCorners:UIRectCornerTopLeft|UIRectCornerTopRight cornerRadii:CGSizeMake(kAYDrawerCornerRadius, kAYDrawerCornerRadius)];
+    CAShapeLayer *layer = [[CAShapeLayer alloc] init];
+    
+    [path appendPath:[UIBezierPath bezierPathWithRect:self.backgroundDimmingView.bounds]];
+    [layer setFillRule:kCAFillRuleEvenOdd];
+    
+    layer.path = path.CGPath;
+    self.backgroundDimmingView.layer.mask = layer;
+}
+
+- (CGFloat)p_bottomSafeArea {
     CGFloat safeAreaBottomInset;
     if (@available(iOS 11.0, *)) {
         safeAreaBottomInset = self.view.safeAreaInsets.bottom;
@@ -417,10 +414,50 @@ static CGFloat kAYDrawerCornerRadius = 13.0f;
     return safeAreaBottomInset;
 }
 
-- (void)setCurrentPosition:(AYPannelPosition)currentPosition {
-    _currentPosition = currentPosition;
-    //通知外部位置变化
-    [_drawerContentViewController drawerPositionDidChange:self];
+- (void)p_dimmingTapGestureRecognizer:(UITapGestureRecognizer *)tapGesture {
+    if (tapGesture == self.tapGestureRecognizer) {
+        if (self.tapGestureRecognizer.state == UIGestureRecognizerStateEnded) {
+            [self p_setDrawerPosition:AYPannelPositionCollapsed animated:YES];
+        }
+    }
 }
+
+- (CGRect)p_backgroundDimmingViewFrameForDrawerPosition:(CGFloat)position {
+    CGFloat cutoutHeight = 2 * kAYDrawerCornerRadius;
+    CGRect backgroundDimmingViewFrame = self.backgroundDimmingView.frame;
+    backgroundDimmingViewFrame.origin.y = 0 - position + cutoutHeight;
+    return backgroundDimmingViewFrame;
+}
+
+- (void)p_setDrawerPosition:(AYPannelPosition)position
+                   animated:(BOOL)animated {
+    
+    CGFloat stopToMoveTo;
+    CGFloat lowestStop = [self collapsedHeight];
+    if (position == AYPannelPositionCollapsed) {
+        stopToMoveTo = lowestStop;
+    } else if (position == AYPannelPositionPartiallyRevealed) {
+        stopToMoveTo = [self partialRevealDrawerHeight];
+    } else if (position == AYPannelPositionOpen) {
+        stopToMoveTo = self.drawerScrollView.frame.size.height;
+    } else { //close
+        stopToMoveTo = 0.0f;
+    }
+    
+    self.isAnimatingDrawerPosition = YES;
+    self.currentPosition = position;
+    
+    __weak typeof (self) weakSelf = self;
+    [UIView animateWithDuration:0.3 delay:0.0 usingSpringWithDamping:0.75 initialSpringVelocity:0.0 options:UIViewAnimationOptionCurveEaseInOut animations:^{
+        [weakSelf.drawerScrollView setContentOffset:CGPointMake(0, stopToMoveTo - lowestStop) animated:NO];
+        
+        weakSelf.backgroundDimmingView.frame = [weakSelf p_backgroundDimmingViewFrameForDrawerPosition:stopToMoveTo];
+        
+    } completion:^(BOOL finished) {
+        weakSelf.isAnimatingDrawerPosition = NO;
+    }];
+}
+
+
 
 @end

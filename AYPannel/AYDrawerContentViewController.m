@@ -66,11 +66,11 @@
 }
 
 - (CGFloat)collapsedDrawerHeight {
-    return kXPannelDefaultCollapsedHeight;
+    return 68.0f;
 }
 
 - (CGFloat)partialRevealDrawerHeight {
-    return kXPannelDefaultPartialRevealHeight;
+    return 264.0f;
 }
 
 #pragma mark - UIScrollViewDelegate

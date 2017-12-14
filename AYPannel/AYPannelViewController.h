@@ -15,9 +15,6 @@ typedef NS_ENUM(NSUInteger, AYPannelPosition) {
     AYPannelPositionClosed, //不在可视范围
 };
 
-static CGFloat const kXPannelDefaultCollapsedHeight = 68.0f;
-static CGFloat const kXPannelDefaultPartialRevealHeight = 264.0f;
-
 @class AYPannelViewController;
 
 //通知外界drawerPosition发生变化
