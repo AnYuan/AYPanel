@@ -35,7 +35,7 @@ static CGFloat kAYDrawerCornerRadius = 13.0f;
 @property (nonatomic, strong) UIVisualEffectView *drawerBackgroundVisualEffectView;
 
 
-@property (nonatomic, strong) UIView *backgroundDimmingView;
+@property (nonatomic, strong) UIView *backgroundDimmingView; //黑色蒙层
 @property (nonatomic, strong) UITapGestureRecognizer *tapGestureRecognizer;
 
 @property (nonatomic, strong) UIViewController *primaryContentViewController;
@@ -373,10 +373,9 @@ static CGFloat kAYDrawerCornerRadius = 13.0f;
         _backgroundDimmingView = [[UIView alloc] init];
         [_backgroundDimmingView setUserInteractionEnabled:NO];
         _backgroundDimmingView.alpha = 0.0;
-        _backgroundDimmingView.backgroundColor = [UIColor clearColor];
+        _backgroundDimmingView.backgroundColor = [UIColor blackColor];
         _tapGestureRecognizer = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(dimmingTapGestureRecognizer:)];
         [_backgroundDimmingView addGestureRecognizer:_tapGestureRecognizer];
-        [_backgroundDimmingView setHidden:YES];
     }
     return _backgroundDimmingView;
 }
