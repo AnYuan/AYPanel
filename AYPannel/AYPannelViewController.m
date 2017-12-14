@@ -16,6 +16,10 @@ static CGFloat kAYTopInset = 20.0f;
 static CGFloat kAYBounceOverflowMargin = 20.0f;
 static CGFloat kAYDefaultDimmingOpacity = 0.5f;
 
+static CGFloat kAYDefaultShadowOpacity = 0.1f;
+static CGFloat kAYDefaultShadowRadius = 3.0f;
+static CGFloat kAYDrawerCornerRadius = 13.0f;
+
 
 @interface AYPannelViewController () <UIScrollViewDelegate, UIGestureRecognizerDelegate, AYPassthroughScrollViewDelegate>
 @property (nonatomic, assign) CGPoint lastDragTargetContentOffSet;
@@ -26,6 +30,10 @@ static CGFloat kAYDefaultDimmingOpacity = 0.5f;
 @property (nonatomic, strong) UIView *primaryContentContainer;
 @property (nonatomic, strong) UIView *drawerContentContainer;
 @property (nonatomic, strong) AYPassthroughScrollView *drawerScrollView;
+@property (nonatomic, strong) UIView *drawerShadowView;
+
+@property (nonatomic, strong) UIVisualEffectView *drawerBackgroundVisualEffectView;
+
 
 @property (nonatomic, strong) UIView *backgroundDimmingView;
 @property (nonatomic, strong) UITapGestureRecognizer *tapGestureRecognizer;
@@ -52,6 +60,11 @@ static CGFloat kAYDefaultDimmingOpacity = 0.5f;
     
     self.lastDragTargetContentOffSet = CGPointZero;
     
+    [self.drawerScrollView addSubview:self.drawerShadowView];
+    
+    [self.drawerScrollView insertSubview:self.drawerBackgroundVisualEffectView aboveSubview:self.drawerShadowView];
+    self.drawerBackgroundVisualEffectView.layer.cornerRadius = kAYDrawerCornerRadius;
+
     [self.drawerScrollView addSubview:self.drawerContentContainer];
 
     self.drawerScrollView.showsVerticalScrollIndicator = NO;
@@ -60,6 +73,10 @@ static CGFloat kAYDefaultDimmingOpacity = 0.5f;
     self.drawerScrollView.decelerationRate = UIScrollViewDecelerationRateFast;
     self.drawerScrollView.touchDelegate = self;
     
+    self.drawerShadowView.layer.shadowOpacity = kAYDefaultShadowOpacity;
+    self.drawerShadowView.layer.shadowRadius = kAYDefaultShadowRadius;
+    self.drawerShadowView.backgroundColor = [UIColor clearColor];
+
     
     self.pan = [[UIPanGestureRecognizer alloc] initWithTarget:self action:@selector(panGestureRecognizerAction:)];
     self.pan.delegate = self;
@@ -107,15 +124,31 @@ static CGFloat kAYDefaultDimmingOpacity = 0.5f;
     
     self.drawerContentContainer.frame = CGRectMake(0, self.drawerScrollView.bounds.size.height - lowestStop, self.drawerScrollView.bounds.size.width, self.drawerScrollView.bounds.size.height + kAYBounceOverflowMargin);
     
+    self.drawerBackgroundVisualEffectView.frame = self.drawerContentContainer.frame;
+    
+    self.drawerShadowView.frame = self.drawerContentContainer.frame;
+    
     self.drawerScrollView.contentSize = CGSizeMake(self.drawerScrollView.bounds.size.width, (self.drawerScrollView.bounds.size.height - lowestStop) + self.drawerScrollView.bounds.size.height - safeAreaBottomInset);
     
     
     self.backgroundDimmingView.frame = CGRectMake(0.0, 0.0, self.view.bounds.size.width, self.view.bounds.size.height + self.drawerScrollView.contentSize.height);
     
-    self.drawerScrollView.transform = CGAffineTransformIdentity;
-    self.drawerContentContainer.transform = self.drawerScrollView.transform;
+    CGPathRef path = [UIBezierPath bezierPathWithRoundedRect:self.drawerContentContainer.bounds byRoundingCorners:UIRectCornerTopLeft | UIRectCornerTopRight cornerRadii:CGSizeMake(kAYDrawerCornerRadius, kAYDrawerCornerRadius)].CGPath;
+    
+    CAShapeLayer *layer = [[CAShapeLayer alloc] init];
+    layer.path = path;
+    layer.frame = self.drawerContentContainer.bounds;
+    layer.fillColor = [UIColor whiteColor].CGColor;
+    layer.backgroundColor = [UIColor clearColor].CGColor;
+    self.drawerContentContainer.layer.mask = layer;
+    self.drawerShadowView.layer.shadowPath = path;
     
     [self.backgroundDimmingView setHidden:NO];
+    
+    
+    self.drawerScrollView.transform = CGAffineTransformIdentity;
+    self.drawerContentContainer.transform = self.drawerScrollView.transform;
+    self.drawerShadowView.transform = self.drawerScrollView.transform;
     
     [self setDrawerPosition:AYPannelPositionCollapsed animated:NO];
 }
@@ -307,15 +340,22 @@ static CGFloat kAYDefaultDimmingOpacity = 0.5f;
 - (UIView *)drawerContentContainer {
     if (!_drawerContentContainer) {
         _drawerContentContainer = [[UIView alloc] initWithFrame:self.view.bounds];
-        _drawerContentContainer.backgroundColor = [UIColor blueColor];
+        _drawerContentContainer.backgroundColor = [UIColor clearColor];
     }
     return _drawerContentContainer;
+}
+
+- (UIView *)drawerShadowView {
+    if (!_drawerShadowView) {
+        _drawerShadowView = [[UIView alloc] init];
+    }
+    return _drawerShadowView;
 }
 
 - (UIView *)primaryContentContainer {
     if (!_primaryContentContainer) {
         _primaryContentContainer = [[UIView alloc] initWithFrame:self.view.bounds];
-        _primaryContentContainer.backgroundColor = [UIColor whiteColor];
+        _primaryContentContainer.backgroundColor = [UIColor clearColor];
     }
     return _primaryContentContainer;
 }
@@ -333,11 +373,21 @@ static CGFloat kAYDefaultDimmingOpacity = 0.5f;
         _backgroundDimmingView = [[UIView alloc] init];
         [_backgroundDimmingView setUserInteractionEnabled:NO];
         _backgroundDimmingView.alpha = 0.0;
-        _backgroundDimmingView.backgroundColor = [UIColor blackColor];
+        _backgroundDimmingView.backgroundColor = [UIColor clearColor];
         _tapGestureRecognizer = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(dimmingTapGestureRecognizer:)];
         [_backgroundDimmingView addGestureRecognizer:_tapGestureRecognizer];
+        [_backgroundDimmingView setHidden:YES];
     }
     return _backgroundDimmingView;
+}
+
+- (UIVisualEffectView *)drawerBackgroundVisualEffectView {
+    if (!_drawerBackgroundVisualEffectView) {
+        UIBlurEffect *blurEffect = [UIBlurEffect effectWithStyle:UIBlurEffectStyleExtraLight];
+        _drawerBackgroundVisualEffectView = [[UIVisualEffectView alloc] initWithEffect:blurEffect];
+        _drawerBackgroundVisualEffectView.clipsToBounds = YES;
+    }
+    return _drawerBackgroundVisualEffectView;
 }
 
 - (CGFloat)collapsedHeight {

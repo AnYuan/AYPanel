@@ -21,6 +21,7 @@
     
     [self.view addSubview:self.headerView];
     [self.view addSubview:self.tableView];
+    self.view.backgroundColor = [UIColor clearColor];
     
     [self.tableView setScrollEnabled:NO];
     self.tableView.bounces = NO;
@@ -33,7 +34,6 @@
     
     self.headerView.frame = CGRectMake(0, 0, self.view.bounds.size.width, 60);
     self.tableView.frame = CGRectMake(0, 60, self.view.bounds.size.width, self.view.bounds.size.height - 60);
-    self.tableView.backgroundColor = [UIColor yellowColor];
 }
 #pragma mark - UITableViewDataSource
 - (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView {
@@ -45,7 +45,10 @@
 }
 
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
-    return [tableView dequeueReusableCellWithIdentifier:@"table view cell"];
+    UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:@"table view cell"];
+    cell.backgroundColor = [UIColor clearColor];
+    cell.textLabel.text = [NSString stringWithFormat:@"This is indexPath %ld", (long)indexPath.row];
+    return cell;
 }
 
 #pragma mark - UITableViewDelegate
@@ -83,6 +86,7 @@
         _tableView = [[UITableView alloc] initWithFrame:self.view.bounds style:UITableViewStylePlain];
         _tableView.dataSource = self;
         _tableView.delegate = self;
+        _tableView.backgroundColor = [UIColor clearColor];
     }
     return _tableView;
 }
@@ -90,7 +94,7 @@
 - (UIView *)headerView {
     if (!_headerView) {
         _headerView = [[UIView alloc] init];
-        _headerView.backgroundColor = [UIColor redColor];
+        _headerView.backgroundColor = [UIColor clearColor];
     }
     return _headerView;
 }

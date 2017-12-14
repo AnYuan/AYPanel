@@ -19,7 +19,7 @@
     
     [self.view addSubview:self.primarySwitch];
     
-    self.view.backgroundColor = [UIColor yellowColor];
+    self.view.backgroundColor = [UIColor blueColor];
 }
 
 - (void)viewDidLayoutSubviews {
