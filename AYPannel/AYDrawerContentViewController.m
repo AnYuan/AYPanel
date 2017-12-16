@@ -73,6 +73,11 @@
     return 264.0f;
 }
 
+- (NSSet<NSNumber *> *)supportPannelPosition {
+    NSArray *array = @[@(AYPannelPositionCollapsed), @(AYPannelPositionOpen), @(AYPannelPositionClosed)];
+    return [NSSet setWithArray:array];
+}
+
 #pragma mark - UIScrollViewDelegate
 - (void)scrollViewDidScroll:(UIScrollView *)scrollView {
     [self.drawerScrollDelegate drawerScrollViewDidScroll:scrollView];

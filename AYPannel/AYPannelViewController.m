@@ -41,6 +41,8 @@ static CGFloat kAYDrawerCornerRadius = 13.0f;
 
 @property (nonatomic, strong) UIViewController *primaryContentViewController; //主视图VC
 @property (nonatomic, strong) UIViewController <AYPannelViewControllerDelegate> *drawerContentViewController; //抽屉视图VC
+
+@property (nonatomic, strong) NSSet <NSNumber *> *supportedPostions;
 @end
 
 @implementation AYPannelViewController
@@ -120,8 +122,15 @@ static CGFloat kAYDrawerCornerRadius = 13.0f;
         self.drawerScrollView.contentInset = UIEdgeInsetsMake(0, 0, self.bottomLayoutGuide.length, 0);
     }
     
-    CGFloat lowestStop = [self collapsedHeight];
-    self.drawerScrollView.frame = CGRectMake(0, kAYTopInset + safeAreaTopInset, self.view.bounds.size.width, self.view.bounds.size.height - kAYTopInset - safeAreaTopInset);
+    CGFloat lowestStop = [[@[@(self.view.bounds.size.height - kAYTopInset - safeAreaTopInset), @([self collapsedHeight]), @([self partialRevealDrawerHeight])] valueForKeyPath:@"@min.floatValue"] floatValue];
+    
+    if ([self.supportedPostions containsObject:@(AYPannelPositionOpen)]) {
+        self.drawerScrollView.frame = CGRectMake(0, kAYTopInset + safeAreaTopInset, self.view.bounds.size.width, self.view.bounds.size.height - kAYTopInset - safeAreaTopInset);
+    } else {
+        CGFloat adjustedTopInset = [self.supportedPostions containsObject:@(AYPannelPositionPartiallyRevealed)] ? [self partialRevealDrawerHeight] : [self collapsedHeight];
+        self.drawerScrollView.frame = CGRectMake(0, self.view.bounds.size.height - adjustedTopInset, self.view.bounds.size.width, adjustedTopInset);
+    }
+    
     
     self.drawerContentContainer.frame = CGRectMake(0, self.drawerScrollView.bounds.size.height - lowestStop, self.drawerScrollView.bounds.size.width, self.drawerScrollView.bounds.size.height + kAYBounceOverflowMargin);
     
@@ -164,7 +173,23 @@ static CGFloat kAYDrawerCornerRadius = 13.0f;
     
     if (scrollView != self.drawerScrollView) { return; }
     
-    CGFloat lowestStop = [self collapsedHeight];
+    NSMutableArray <NSNumber *> *drawerStops = [[NSMutableArray alloc] init];
+    
+    if ([self.supportedPostions containsObject:@(AYPannelPositionCollapsed)]) {
+        [drawerStops addObject:@([self collapsedHeight])];
+    }
+    
+    if ([self.supportedPostions containsObject:@(AYPannelPositionPartiallyRevealed)]) {
+        [drawerStops addObject:@([self partialRevealDrawerHeight])];
+    }
+    
+    if ([self.supportedPostions containsObject:@(AYPannelPositionOpen)]) {
+        [drawerStops addObject:@(self.drawerScrollView.bounds.size.height)];
+    }
+    
+    CGFloat lowestStop = [[drawerStops valueForKeyPath:@"@min.floatValue"] floatValue];
+
+    
     //蒙层颜色变化
     if ((scrollView.contentOffset.y - [self p_bottomSafeArea]) > ([self partialRevealDrawerHeight] - lowestStop)) {
         CGFloat fullRevealHeight = self.drawerScrollView.bounds.size.height;
@@ -189,13 +214,25 @@ static CGFloat kAYDrawerCornerRadius = 13.0f;
 - (void)scrollViewDidEndDragging:(UIScrollView *)scrollView willDecelerate:(BOOL)decelerate {
     if (scrollView == self.drawerScrollView) {
         
-        CGFloat lowestStop = [self collapsedHeight];
-        CGFloat distanceFromBottomOfView = lowestStop + self.lastDragTargetContentOffSet.y;
+        NSMutableArray <NSNumber *> *drawerStops = [[NSMutableArray alloc] init];
         
+        if ([self.supportedPostions containsObject:@(AYPannelPositionCollapsed)]) {
+            [drawerStops addObject:@([self collapsedHeight])];
+        }
+
+        if ([self.supportedPostions containsObject:@(AYPannelPositionPartiallyRevealed)]) {
+            [drawerStops addObject:@([self partialRevealDrawerHeight])];
+        }
+        
+        if ([self.supportedPostions containsObject:@(AYPannelPositionOpen)]) {
+            [drawerStops addObject:@(self.drawerScrollView.bounds.size.height)];
+        }
+        
+        //取最小值
+        CGFloat lowestStop = [[drawerStops valueForKeyPath:@"@min.floatValue"] floatValue];
+        CGFloat distanceFromBottomOfView = lowestStop + self.lastDragTargetContentOffSet.y;
         CGFloat currentClosestStop = lowestStop;
         
-        //collapsed, partial reveal, open
-        NSArray *drawerStops = @[@([self collapsedHeight]), @([self partialRevealDrawerHeight]), @(self.drawerScrollView.frame.size.height)];
         
         for (NSNumber *currentStop in drawerStops) {
             if (fabs(currentStop.floatValue - distanceFromBottomOfView) < fabs(currentClosestStop - distanceFromBottomOfView)) {
@@ -203,13 +240,15 @@ static CGFloat kAYDrawerCornerRadius = 13.0f;
             }
         }
         
-        if (fabs(currentClosestStop - (self.drawerScrollView.frame.size.height)) <= FLT_EPSILON) {
+        if (fabs(currentClosestStop - (self.drawerScrollView.frame.size.height)) <= FLT_EPSILON &&
+            [self.supportedPostions containsObject:@(AYPannelPositionOpen)]) {
             //open
             [self p_setDrawerPosition:AYPannelPositionOpen animated:YES];
-        } else if (fabs(currentClosestStop - [self collapsedHeight]) <= FLT_EPSILON) {
+        } else if (fabs(currentClosestStop - [self collapsedHeight]) <= FLT_EPSILON &&
+                   [self.supportedPostions containsObject:@(AYPannelPositionCollapsed)]) {
             //collapsed
             [self p_setDrawerPosition:AYPannelPositionCollapsed animated:YES];
-        } else {
+        } else if ([self.supportedPostions containsObject:@(AYPannelPositionPartiallyRevealed)]){
             //partially revealed
             [self p_setDrawerPosition:AYPannelPositionPartiallyRevealed animated:YES];
         }
@@ -238,13 +277,25 @@ static CGFloat kAYDrawerCornerRadius = 13.0f;
         [self.drawerScrollView setContentOffset:p];
     } else if (getsutre.state == UIGestureRecognizerStateEnded) {
         self.shouldScrollDrawerScrollView = NO;
-        CGFloat lowestStop = [self collapsedHeight];
-        CGFloat distanceFromBottomOfView = self.drawerScrollView.frame.size.height - lowestStop - [getsutre translationInView:self.drawerScrollView].y;
+        NSMutableArray <NSNumber *> *drawerStops = [[NSMutableArray alloc] init];
         
+        if ([self.supportedPostions containsObject:@(AYPannelPositionCollapsed)]) {
+            [drawerStops addObject:@([self collapsedHeight])];
+        }
+        
+        if ([self.supportedPostions containsObject:@(AYPannelPositionPartiallyRevealed)]) {
+            [drawerStops addObject:@([self partialRevealDrawerHeight])];
+        }
+        
+        if ([self.supportedPostions containsObject:@(AYPannelPositionOpen)]) {
+            [drawerStops addObject:@(self.drawerScrollView.bounds.size.height)];
+        }
+        
+        //取最小值
+        CGFloat lowestStop = [[drawerStops valueForKeyPath:@"@min.floatValue"] floatValue];
+        CGFloat distanceFromBottomOfView = lowestStop + self.lastDragTargetContentOffSet.y;
         CGFloat currentClosestStop = lowestStop;
         
-        //collapsed, partial reveal, open
-        NSArray *drawerStops = @[@([self collapsedHeight]), @([self partialRevealDrawerHeight]), @(self.drawerScrollView.frame.size.height)];
         
         for (NSNumber *currentStop in drawerStops) {
             if (fabs(currentStop.floatValue - distanceFromBottomOfView) < fabs(currentClosestStop - distanceFromBottomOfView)) {
@@ -252,13 +303,15 @@ static CGFloat kAYDrawerCornerRadius = 13.0f;
             }
         }
         
-        if (fabs(currentClosestStop - (self.drawerScrollView.frame.size.height)) <= FLT_EPSILON) {
+        if (fabs(currentClosestStop - (self.drawerScrollView.frame.size.height)) <= FLT_EPSILON &&
+            [self.supportedPostions containsObject:@(AYPannelPositionOpen)]) {
             //open
             [self p_setDrawerPosition:AYPannelPositionOpen animated:YES];
-        } else if (fabs(currentClosestStop - [self collapsedHeight]) <= FLT_EPSILON) {
+        } else if (fabs(currentClosestStop - [self collapsedHeight]) <= FLT_EPSILON &&
+                   [self.supportedPostions containsObject:@(AYPannelPositionCollapsed)]) {
             //collapsed
             [self p_setDrawerPosition:AYPannelPositionCollapsed animated:YES];
-        } else {
+        } else if ([self.supportedPostions containsObject:@(AYPannelPositionPartiallyRevealed)]){
             //partially revealed
             [self p_setDrawerPosition:AYPannelPositionPartiallyRevealed animated:YES];
         }
@@ -386,6 +439,19 @@ static CGFloat kAYDrawerCornerRadius = 13.0f;
     [_drawerContentViewController drawerPositionDidChange:self];
 }
 
+- (NSSet<NSNumber *> *)supportedPostions {
+    if (!_supportedPostions) {
+        if ([_drawerContentViewController respondsToSelector:@selector(supportPannelPosition)]) {
+            _supportedPostions = [_drawerContentViewController supportPannelPosition];
+        }
+        if (!_supportedPostions) { //外层未返回，使用默认
+            NSArray *array = @[@(AYPannelPositionOpen), @(AYPannelPositionClosed), @(AYPannelPositionCollapsed), @(AYPannelPositionPartiallyRevealed)];
+            _supportedPostions = [NSSet setWithArray:array];
+        }
+    }
+    return _supportedPostions;
+}
+
 #pragma mark - Private Mehtods
 
 - (void)p_maskBackgroundDimmingView {
@@ -431,6 +497,10 @@ static CGFloat kAYDrawerCornerRadius = 13.0f;
 
 - (void)p_setDrawerPosition:(AYPannelPosition)position
                    animated:(BOOL)animated {
+    
+    if (![self.supportedPostions containsObject:@(position)]) {
+        return;
+    }
     
     CGFloat stopToMoveTo;
     CGFloat lowestStop = [self collapsedHeight];
