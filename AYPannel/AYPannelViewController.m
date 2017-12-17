@@ -8,7 +8,6 @@
 
 #import "AYPannelViewController.h"
 #import "AYPassthroughScrollView.h"
-#import "AYDrawerContentViewController.h"
 
 static CGFloat kAYDefaultCollapsedHeight = 68.0f; //默认收起大小
 static CGFloat kAYDefaultPartialRevealHeight = 264.0f; //默认部分展开大小
