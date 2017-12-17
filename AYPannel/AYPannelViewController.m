@@ -38,15 +38,15 @@ static CGFloat kAYDrawerCornerRadius = 13.0f;
 
 @property (nonatomic, strong) UIView *backgroundDimmingView; //黑色蒙层
 
-@property (nonatomic, strong) UIViewController *primaryContentViewController; //主视图VC
-@property (nonatomic, strong) UIViewController <AYPannelViewControllerDelegate> *drawerContentViewController; //抽屉视图VC
+@property (nonatomic, strong) id <AYPannelPrimaryDelegate>primaryContentViewController; //主视图VC
+@property (nonatomic, strong) id <AYPannelDrawerDelegate>drawerContentViewController; //抽屉视图VC
 
 @property (nonatomic, strong) NSSet <NSNumber *> *supportedPostions;
 @end
 
 @implementation AYPannelViewController
 
-- (instancetype)initWithPrimaryContentViewController:(UIViewController *)primaryContentViewController drawerContentViewController:(UIViewController <AYPannelViewControllerDelegate> *)drawerContentViewController {
+- (instancetype)initWithPrimaryContentViewController:(id<AYPannelPrimaryDelegate>)primaryContentViewController drawerContentViewController:(id<AYPannelDrawerDelegate>)drawerContentViewController {
     self = [super init];
     if (self) {
         self.primaryContentViewController = primaryContentViewController;
@@ -349,17 +349,15 @@ static CGFloat kAYDrawerCornerRadius = 13.0f;
 
 
 #pragma mark - Getter and Setter
-- (void)setPrimaryContentViewController:(UIViewController *)primaryContentViewController {
+- (void)setPrimaryContentViewController:(id<AYPannelPrimaryDelegate>)primaryContentViewController {
     
     if (!primaryContentViewController) { return; }
     _primaryContentViewController = primaryContentViewController;
-    [self addChildViewController:_primaryContentViewController];
 }
 
-- (void)setDrawerContentViewController:(UIViewController <AYPannelViewControllerDelegate>*)drawerContentViewController {
+- (void)setDrawerContentViewController:(id<AYPannelDrawerDelegate>)drawerContentViewController {
     if (!drawerContentViewController) { return; }
     _drawerContentViewController = drawerContentViewController;
-    [self addChildViewController:_drawerContentViewController];
 }
 
 - (UIView *)drawerContentContainer {

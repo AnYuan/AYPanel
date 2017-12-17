@@ -8,5 +8,7 @@
 
 #import <UIKit/UIKit.h>
 
-@interface AYPrimaryContentViewController : UIViewController
+@protocol AYPannelPrimaryDelegate;
+
+@interface AYPrimaryContentViewController : UIViewController <AYPannelPrimaryDelegate>
 @end

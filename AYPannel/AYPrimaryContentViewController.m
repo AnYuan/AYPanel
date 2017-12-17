@@ -7,6 +7,7 @@
 //
 
 #import "AYPrimaryContentViewController.h"
+#import "AYPannelViewController.h"
 
 @interface AYPrimaryContentViewController ()
 @property (nonatomic, strong) UISwitch *primarySwitch;

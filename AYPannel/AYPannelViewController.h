@@ -18,12 +18,18 @@ typedef NS_ENUM(NSUInteger, AYPannelPosition) {
 @class AYPannelViewController;
 
 //通知外界drawerPosition发生变化
-@protocol AYPannelViewControllerDelegate
+@protocol AYPannelDrawerDelegate <NSObject>
+@property (nonatomic, strong) UIView *view;
+
 - (void)drawerPositionDidChange:(AYPannelViewController *)drawer;
 @optional
 - (CGFloat)collapsedDrawerHeight;
 - (CGFloat)partialRevealDrawerHeight;
 - (NSSet <NSNumber *> *)supportPannelPosition; // 返回支持位置的AYPannelPosition枚举的NSNumber对象, 如果不实现或者返回空，就默认是所有位置都支持
+@end
+
+@protocol AYPannelPrimaryDelegate <NSObject>
+@property (nonatomic, strong) UIView *view;
 @end
 
 //Drawer 滚动回调
@@ -35,6 +41,6 @@ typedef NS_ENUM(NSUInteger, AYPannelPosition) {
 
 @property (nonatomic, assign) AYPannelPosition currentPosition;
 @property (nonatomic, assign) BOOL shouldScrollDrawerScrollView;
-- (instancetype)initWithPrimaryContentViewController:(UIViewController *)primaryContentViewController
-                         drawerContentViewController:(UIViewController  <AYPannelViewControllerDelegate> *)drawerContentViewController;
+- (instancetype)initWithPrimaryContentViewController:(id<AYPannelPrimaryDelegate>)primaryContentViewController
+                         drawerContentViewController:(id<AYPannelDrawerDelegate>)drawerContentViewController;
 @end
