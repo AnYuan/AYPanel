@@ -194,7 +194,6 @@ typedef NS_ENUM(NSUInteger, AYPannelSnapMode) {
     }
     
     CGFloat lowestStop = [[drawerStops valueForKeyPath:@"@min.floatValue"] floatValue];
-
     
     //蒙层颜色变化
     if ((scrollView.contentOffset.y - [self p_bottomSafeArea]) > ([self partialRevealDrawerHeight] - lowestStop)) {
@@ -220,102 +219,7 @@ typedef NS_ENUM(NSUInteger, AYPannelSnapMode) {
 - (void)scrollViewDidEndDragging:(UIScrollView *)scrollView willDecelerate:(BOOL)decelerate {
     if (scrollView == self.drawerScrollView) {
         
-        NSMutableArray <NSNumber *> *drawerStops = [[NSMutableArray alloc] init];
-        CGFloat currentDrawerPositionStop = 0.0f;
-        
-        if ([self.supportedPostions containsObject:@(AYPannelPositionCollapsed)]) {
-            CGFloat collapsedHeight = [self collapsedHeight];
-            [drawerStops addObject:@(collapsedHeight)];
-            if (self.currentPosition == AYPannelPositionCollapsed) {
-                currentDrawerPositionStop = collapsedHeight;
-            }
-        }
-
-        if ([self.supportedPostions containsObject:@(AYPannelPositionPartiallyRevealed)]) {
-            CGFloat partialHeight = [self partialRevealDrawerHeight];
-            [drawerStops addObject:@(partialHeight)];
-            if (self.currentPosition == AYPannelPositionPartiallyRevealed) {
-                currentDrawerPositionStop = partialHeight;
-            }
-        }
-        
-        if ([self.supportedPostions containsObject:@(AYPannelPositionOpen)]) {
-            CGFloat openHeight = self.drawerScrollView.bounds.size.height;
-            [drawerStops addObject:@(openHeight)];
-            if (self.currentPosition == AYPannelPositionOpen) {
-                currentDrawerPositionStop = openHeight;
-            }
-        }
-        
-        //取最小值
-        CGFloat lowestStop = [[drawerStops valueForKeyPath:@"@min.floatValue"] floatValue];
-        CGFloat distanceFromBottomOfView = lowestStop + self.lastDragTargetContentOffSet.y;
-        CGFloat currentClosestStop = lowestStop;
-        
-        AYPannelPosition cloestValidDrawerPosition = self.currentPosition;
-        
-        for (NSNumber *currentStop in drawerStops) {
-            if (fabs(currentStop.floatValue - distanceFromBottomOfView) < fabs(currentClosestStop - distanceFromBottomOfView)) {
-                currentClosestStop = currentStop.integerValue;
-            }
-        }
-        
-        if (fabs(currentClosestStop - (self.drawerScrollView.frame.size.height)) <= FLT_EPSILON &&
-            [self.supportedPostions containsObject:@(AYPannelPositionOpen)]) {
-            
-            cloestValidDrawerPosition = AYPannelPositionOpen;
-            
-        } else if (fabs(currentClosestStop - [self collapsedHeight]) <= FLT_EPSILON &&
-                   [self.supportedPostions containsObject:@(AYPannelPositionCollapsed)]) {
-            
-            cloestValidDrawerPosition = AYPannelPositionCollapsed;
-            
-        } else if ([self.supportedPostions containsObject:@(AYPannelPositionPartiallyRevealed)]){
-            
-            cloestValidDrawerPosition = AYPannelPositionPartiallyRevealed;
-            
-        }
-        
-        AYPannelSnapMode snapToUse = cloestValidDrawerPosition == self.currentPosition ? AYPannelSnapModeUnlessExceeded : AYPannelSnapModeNearestPosition;
-        
-        switch (snapToUse) {
-            case AYPannelSnapModeNearestPosition: {
-                [self p_setDrawerPosition:cloestValidDrawerPosition animated:YES];
-            }
-                break;
-            case AYPannelSnapModeUnlessExceeded: {
-                CGFloat distance = currentDrawerPositionStop - distanceFromBottomOfView;
-                AYPannelPosition positionToSnapTo = self.currentPosition;
-                if (fabs(distance) > kAYPannelSnapModeUnlessExceededThreshold) {
-                    if (distance < 0) {
-                        NSArray <NSNumber *> *sorted = [[self.supportedPostions allObjects] sortedArrayUsingComparator:^NSComparisonResult(id  _Nonnull obj1, id  _Nonnull obj2) {
-                            return [obj1 integerValue] < [obj2 integerValue];
-                        }];
-                        
-                        for (NSNumber *n in sorted) {
-                            if (n.integerValue != AYPannelPositionClosed && n.integerValue > self.currentPosition) {
-                                positionToSnapTo = (AYPannelPosition)n.integerValue;
-                                break;
-                            }
-                        }
-                    } else {
-                        NSArray <NSNumber *> *sorted = [[self.supportedPostions allObjects] sortedArrayUsingComparator:^NSComparisonResult(id  _Nonnull obj1, id  _Nonnull obj2) {
-                            return [obj1 integerValue] > [obj2 integerValue];
-                        }];
-                        
-                        for (NSNumber *n in sorted) {
-                            if (n.integerValue != AYPannelPositionClosed && n.integerValue < self.currentPosition) {
-                                positionToSnapTo = (AYPannelPosition)n.integerValue;
-                                break;
-                            }
-                        }
-                    }
-                }
-                [self p_setDrawerPosition:positionToSnapTo animated:YES];
-                
-            }
-                break;
-        }
+        [self p_setDrawerPosition:[self p_postionToMoveFromPostion:self.currentPosition lastDragTargetContentOffSet:self.lastDragTargetContentOffSet scrollView:self.drawerScrollView supportedPosition:self.supportedPostions] animated:YES];
     }
 }
 
@@ -341,102 +245,8 @@ typedef NS_ENUM(NSUInteger, AYPannelSnapMode) {
         [self.drawerScrollView setContentOffset:p];
     } else if (getsutre.state == UIGestureRecognizerStateEnded) {
         self.shouldScrollDrawerScrollView = NO;
-        NSMutableArray <NSNumber *> *drawerStops = [[NSMutableArray alloc] init];
-        CGFloat currentDrawerPositionStop = 0.0f;
         
-        if ([self.supportedPostions containsObject:@(AYPannelPositionCollapsed)]) {
-            CGFloat collapsedHeight = [self collapsedHeight];
-            [drawerStops addObject:@(collapsedHeight)];
-            if (self.currentPosition == AYPannelPositionCollapsed) {
-                currentDrawerPositionStop = collapsedHeight;
-            }
-        }
-        
-        if ([self.supportedPostions containsObject:@(AYPannelPositionPartiallyRevealed)]) {
-            CGFloat partialHeight = [self partialRevealDrawerHeight];
-            [drawerStops addObject:@(partialHeight)];
-            if (self.currentPosition == AYPannelPositionPartiallyRevealed) {
-                currentDrawerPositionStop = partialHeight;
-            }
-        }
-        
-        if ([self.supportedPostions containsObject:@(AYPannelPositionOpen)]) {
-            CGFloat openHeight = self.drawerScrollView.bounds.size.height;
-            [drawerStops addObject:@(openHeight)];
-            if (self.currentPosition == AYPannelPositionOpen) {
-                currentDrawerPositionStop = openHeight;
-            }
-        }
-        
-        //取最小值
-        CGFloat lowestStop = [[drawerStops valueForKeyPath:@"@min.floatValue"] floatValue];
-        CGFloat distanceFromBottomOfView = lowestStop + self.lastDragTargetContentOffSet.y;
-        CGFloat currentClosestStop = lowestStop;
-        
-        AYPannelPosition cloestValidDrawerPosition = self.currentPosition;
-        
-        for (NSNumber *currentStop in drawerStops) {
-            if (fabs(currentStop.floatValue - distanceFromBottomOfView) < fabs(currentClosestStop - distanceFromBottomOfView)) {
-                currentClosestStop = currentStop.integerValue;
-            }
-        }
-        
-        if (fabs(currentClosestStop - (self.drawerScrollView.frame.size.height)) <= FLT_EPSILON &&
-            [self.supportedPostions containsObject:@(AYPannelPositionOpen)]) {
-            
-            cloestValidDrawerPosition = AYPannelPositionOpen;
-            
-        } else if (fabs(currentClosestStop - [self collapsedHeight]) <= FLT_EPSILON &&
-                   [self.supportedPostions containsObject:@(AYPannelPositionCollapsed)]) {
-            
-            cloestValidDrawerPosition = AYPannelPositionCollapsed;
-            
-        } else if ([self.supportedPostions containsObject:@(AYPannelPositionPartiallyRevealed)]){
-            
-            cloestValidDrawerPosition = AYPannelPositionPartiallyRevealed;
-            
-        }
-        
-        AYPannelSnapMode snapToUse = cloestValidDrawerPosition == self.currentPosition ? AYPannelSnapModeUnlessExceeded : AYPannelSnapModeNearestPosition;
-        
-        switch (snapToUse) {
-            case AYPannelSnapModeNearestPosition: {
-                [self p_setDrawerPosition:cloestValidDrawerPosition animated:YES];
-            }
-                break;
-            case AYPannelSnapModeUnlessExceeded: {
-                CGFloat distance = currentDrawerPositionStop - distanceFromBottomOfView;
-                AYPannelPosition positionToSnapTo = self.currentPosition;
-                if (fabs(distance) > kAYPannelSnapModeUnlessExceededThreshold) {
-                    if (distance < 0) {
-                        NSArray <NSNumber *> *sorted = [[self.supportedPostions allObjects] sortedArrayUsingComparator:^NSComparisonResult(id  _Nonnull obj1, id  _Nonnull obj2) {
-                            return [obj1 integerValue] < [obj2 integerValue];
-                        }];
-                        
-                        for (NSNumber *n in sorted) {
-                            if (n.integerValue != AYPannelPositionClosed && n.integerValue > self.currentPosition) {
-                                positionToSnapTo = (AYPannelPosition)n.integerValue;
-                                break;
-                            }
-                        }
-                    } else {
-                        NSArray <NSNumber *> *sorted = [[self.supportedPostions allObjects] sortedArrayUsingComparator:^NSComparisonResult(id  _Nonnull obj1, id  _Nonnull obj2) {
-                            return [obj1 integerValue] > [obj2 integerValue];
-                        }];
-                        
-                        for (NSNumber *n in sorted) {
-                            if (n.integerValue != AYPannelPositionClosed && n.integerValue < self.currentPosition) {
-                                positionToSnapTo = (AYPannelPosition)n.integerValue;
-                                break;
-                            }
-                        }
-                    }
-                }
-                [self p_setDrawerPosition:positionToSnapTo animated:YES];
-                
-            }
-                break;
-        }
+        [self p_setDrawerPosition:[self p_postionToMoveFromPostion:self.currentPosition lastDragTargetContentOffSet:self.lastDragTargetContentOffSet scrollView:self.drawerScrollView supportedPosition:self.supportedPostions] animated:YES];
     }
 }
 
@@ -613,6 +423,112 @@ typedef NS_ENUM(NSUInteger, AYPannelSnapMode) {
     CGRect backgroundDimmingViewFrame = self.backgroundDimmingView.frame;
     backgroundDimmingViewFrame.origin.y = 0 - position + cutoutHeight;
     return backgroundDimmingViewFrame;
+}
+//self.lastDragTargetContentOffSet.y
+- (AYPannelPosition)p_postionToMoveFromPostion:(AYPannelPosition)currentPosition
+                   lastDragTargetContentOffSet:(CGPoint)lastDragTargetContentOffSet
+                                    scrollView:(UIScrollView *)scrollView
+                             supportedPosition:(NSSet <NSNumber *> *)supportedPosition {
+    
+    AYPannelPosition positionToMove;
+    
+    NSMutableArray <NSNumber *> *drawerStops = [[NSMutableArray alloc] init];
+    CGFloat currentDrawerPositionStop = 0.0f;
+    
+    if ([supportedPosition containsObject:@(AYPannelPositionCollapsed)]) {
+        CGFloat collapsedHeight = [self collapsedHeight];
+        [drawerStops addObject:@(collapsedHeight)];
+        if (currentPosition == AYPannelPositionCollapsed) {
+            currentDrawerPositionStop = collapsedHeight;
+        }
+    }
+    
+    if ([supportedPosition containsObject:@(AYPannelPositionPartiallyRevealed)]) {
+        CGFloat partialHeight = [self partialRevealDrawerHeight];
+        [drawerStops addObject:@(partialHeight)];
+        if (currentPosition == AYPannelPositionPartiallyRevealed) {
+            currentDrawerPositionStop = partialHeight;
+        }
+    }
+    
+    if ([supportedPosition containsObject:@(AYPannelPositionOpen)]) {
+        CGFloat openHeight = scrollView.bounds.size.height;
+        [drawerStops addObject:@(openHeight)];
+        if (currentPosition == AYPannelPositionOpen) {
+            currentDrawerPositionStop = openHeight;
+        }
+    }
+    
+    //取最小值
+    CGFloat lowestStop = [[drawerStops valueForKeyPath:@"@min.floatValue"] floatValue];
+    CGFloat distanceFromBottomOfView = lowestStop + lastDragTargetContentOffSet.y;
+    CGFloat currentClosestStop = lowestStop;
+    
+    AYPannelPosition cloestValidDrawerPosition = currentPosition;
+    
+    for (NSNumber *currentStop in drawerStops) {
+        if (fabs(currentStop.floatValue - distanceFromBottomOfView) < fabs(currentClosestStop - distanceFromBottomOfView)) {
+            currentClosestStop = currentStop.integerValue;
+        }
+    }
+    
+    if (fabs(currentClosestStop - (scrollView.frame.size.height)) <= FLT_EPSILON &&
+        [supportedPosition containsObject:@(AYPannelPositionOpen)]) {
+        
+        cloestValidDrawerPosition = AYPannelPositionOpen;
+        
+    } else if (fabs(currentClosestStop - [self collapsedHeight]) <= FLT_EPSILON &&
+               [supportedPosition containsObject:@(AYPannelPositionCollapsed)]) {
+        
+        cloestValidDrawerPosition = AYPannelPositionCollapsed;
+        
+    } else if ([supportedPosition containsObject:@(AYPannelPositionPartiallyRevealed)]){
+        
+        cloestValidDrawerPosition = AYPannelPositionPartiallyRevealed;
+        
+    }
+    
+    AYPannelSnapMode snapToUse = cloestValidDrawerPosition == currentPosition ? AYPannelSnapModeUnlessExceeded : AYPannelSnapModeNearestPosition;
+    
+    switch (snapToUse) {
+        case AYPannelSnapModeNearestPosition: {
+            positionToMove = cloestValidDrawerPosition;
+        }
+            break;
+        case AYPannelSnapModeUnlessExceeded: {
+            CGFloat distance = currentDrawerPositionStop - distanceFromBottomOfView;
+            AYPannelPosition positionToSnapTo = currentPosition;
+            if (fabs(distance) > kAYPannelSnapModeUnlessExceededThreshold) {
+                if (distance < 0) {
+                    NSArray <NSNumber *> *sorted = [[supportedPosition allObjects] sortedArrayUsingComparator:^NSComparisonResult(id  _Nonnull obj1, id  _Nonnull obj2) {
+                        return [obj1 integerValue] < [obj2 integerValue];
+                    }];
+                    
+                    for (NSNumber *n in sorted) {
+                        if (n.integerValue != AYPannelPositionClosed && n.integerValue > self.currentPosition) {
+                            positionToSnapTo = (AYPannelPosition)n.integerValue;
+                            break;
+                        }
+                    }
+                } else {
+                    NSArray <NSNumber *> *sorted = [[supportedPosition allObjects] sortedArrayUsingComparator:^NSComparisonResult(id  _Nonnull obj1, id  _Nonnull obj2) {
+                        return [obj1 integerValue] > [obj2 integerValue];
+                    }];
+                    
+                    for (NSNumber *n in sorted) {
+                        if (n.integerValue != AYPannelPositionClosed && n.integerValue < self.currentPosition) {
+                            positionToSnapTo = (AYPannelPosition)n.integerValue;
+                            break;
+                        }
+                    }
+                }
+            }
+            positionToMove = positionToSnapTo;
+        }
+            break;
+    }
+    
+    return positionToMove;
 }
 
 - (void)p_setDrawerPosition:(AYPannelPosition)position
