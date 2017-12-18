@@ -293,7 +293,7 @@ typedef NS_ENUM(NSUInteger, AYPannelSnapMode) {
                         }];
                         
                         for (NSNumber *n in sorted) {
-                            if (n.integerValue != 0 && n.integerValue > self.currentPosition) {
+                            if (n.integerValue != AYPannelPositionClosed && n.integerValue > self.currentPosition) {
                                 positionToSnapTo = (AYPannelPosition)n.integerValue;
                                 break;
                             }
@@ -304,7 +304,7 @@ typedef NS_ENUM(NSUInteger, AYPannelSnapMode) {
                         }];
                         
                         for (NSNumber *n in sorted) {
-                            if (n.integerValue != 0 && n.integerValue < self.currentPosition) {
+                            if (n.integerValue != AYPannelPositionClosed && n.integerValue < self.currentPosition) {
                                 positionToSnapTo = (AYPannelPosition)n.integerValue;
                                 break;
                             }
