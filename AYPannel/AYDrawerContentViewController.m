@@ -21,7 +21,7 @@
     
     [self.view addSubview:self.headerView];
     [self.view addSubview:self.tableView];
-    self.view.backgroundColor = [UIColor clearColor];
+    self.view.backgroundColor = [UIColor yellowColor];
     
     [self.tableView setScrollEnabled:NO];
     self.tableView.bounces = NO;
@@ -76,6 +76,23 @@
 - (NSSet<NSNumber *> *)supportPannelPosition {
     NSArray *array = @[@(AYPannelPositionCollapsed), @(AYPannelPositionPartiallyRevealed), @(AYPannelPositionOpen), @(AYPannelPositionClosed)];
     return [NSSet setWithArray:array];
+}
+
+- (UIVisualEffectView *)drawerBackgroundVisualEffectView {
+    UIBlurEffect *blurEffect = [UIBlurEffect effectWithStyle:UIBlurEffectStyleExtraLight];
+    UIVisualEffectView *drawerBackgroundVisualEffectView = [[UIVisualEffectView alloc] initWithEffect:blurEffect];
+    drawerBackgroundVisualEffectView.clipsToBounds = YES;
+    return drawerBackgroundVisualEffectView;
+}
+
+- (CGFloat)drawerCornerRadius {
+    return 13.0f;
+}
+
+- (UIView *)backgroundDimmingView {
+    UIView *backgroundDimmingView = [[UIView alloc] init];
+    backgroundDimmingView.backgroundColor = [UIColor blackColor];
+    return backgroundDimmingView;
 }
 
 #pragma mark - UIScrollViewDelegate
