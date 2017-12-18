@@ -393,22 +393,22 @@ typedef NS_ENUM(NSUInteger, AYPannelSnapMode) {
 
 - (void)p_maskBackgroundDimmingView {
     
-    if (!self.backgroundDimmingView) { return; }
-    
-    CGFloat cornerRadius = [self p_cornerRadius];
-    CGFloat cutoutHeight = 2 * cornerRadius;
-    CGFloat maskHeight = self.backgroundDimmingView.bounds.size.height - cutoutHeight - self.drawerScrollView.contentSize.height;
-    CGFloat maskWidth = self.backgroundDimmingView.bounds.size.width;
-    CGRect drawerRect = CGRectMake(0, maskHeight, maskWidth, self.drawerContentContainer.bounds.size.height);
-    
-    UIBezierPath *path = [UIBezierPath bezierPathWithRoundedRect:drawerRect byRoundingCorners:UIRectCornerTopLeft|UIRectCornerTopRight cornerRadii:CGSizeMake(cornerRadius, cornerRadius)];
-    CAShapeLayer *layer = [[CAShapeLayer alloc] init];
-    
-    [path appendPath:[UIBezierPath bezierPathWithRect:self.backgroundDimmingView.bounds]];
-    [layer setFillRule:kCAFillRuleEvenOdd];
-    
-    layer.path = path.CGPath;
-    self.backgroundDimmingView.layer.mask = layer;
+//    if (!self.backgroundDimmingView) { return; }
+//
+//    CGFloat cornerRadius = [self p_cornerRadius];
+//    CGFloat cutoutHeight = 2 * cornerRadius;
+//    CGFloat maskHeight = self.backgroundDimmingView.bounds.size.height - cutoutHeight - self.drawerScrollView.contentSize.height;
+//    CGFloat maskWidth = self.backgroundDimmingView.bounds.size.width;
+//    CGRect drawerRect = CGRectMake(0, maskHeight, maskWidth, self.drawerContentContainer.bounds.size.height);
+//
+//    UIBezierPath *path = [UIBezierPath bezierPathWithRoundedRect:drawerRect byRoundingCorners:UIRectCornerTopLeft|UIRectCornerTopRight cornerRadii:CGSizeMake(cornerRadius, cornerRadius)];
+//    CAShapeLayer *layer = [[CAShapeLayer alloc] init];
+//
+//    [path appendPath:[UIBezierPath bezierPathWithRect:self.backgroundDimmingView.bounds]];
+//    [layer setFillRule:kCAFillRuleEvenOdd];
+//
+//    layer.path = path.CGPath;
+//    self.backgroundDimmingView.layer.mask = layer;
 }
 
 - (CGFloat)p_bottomSafeArea {
@@ -557,7 +557,11 @@ typedef NS_ENUM(NSUInteger, AYPannelSnapMode) {
     } else if (position == AYPannelPositionPartiallyRevealed) {
         stopToMoveTo = [self partialRevealDrawerHeight];
     } else if (position == AYPannelPositionOpen) {
-        stopToMoveTo = self.drawerScrollView.frame.size.height;
+        if (self.backgroundDimmingView) {
+            stopToMoveTo = self.drawerScrollView.frame.size.height;
+        } else {
+            stopToMoveTo = self.drawerScrollView.frame.size.height - kAYDefaultShadowRadius;
+        }
     } else { //close
         stopToMoveTo = 0.0f;
     }
