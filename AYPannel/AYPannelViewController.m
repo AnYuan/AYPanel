@@ -20,6 +20,13 @@ static CGFloat kAYDefaultShadowOpacity = 0.1f;
 static CGFloat kAYDefaultShadowRadius = 3.0f;
 static CGFloat kAYDrawerCornerRadius = 13.0f;
 
+static CGFloat kAYPannelSnapModeUnlessExceededThreshold = 20.0f;
+
+typedef NS_ENUM(NSUInteger, AYPannelSnapMode) {
+    AYPannelSnapModeNearestPosition,
+    AYPannelSnapModeUnlessExceeded,
+};
+
 
 @interface AYPannelViewController () <UIScrollViewDelegate, UIGestureRecognizerDelegate, AYPassthroughScrollViewDelegate>
 @property (nonatomic, assign) CGPoint lastDragTargetContentOffSet; //记录上次滑动位置
@@ -214,17 +221,30 @@ static CGFloat kAYDrawerCornerRadius = 13.0f;
     if (scrollView == self.drawerScrollView) {
         
         NSMutableArray <NSNumber *> *drawerStops = [[NSMutableArray alloc] init];
+        CGFloat currentDrawerPositionStop = 0.0f;
         
         if ([self.supportedPostions containsObject:@(AYPannelPositionCollapsed)]) {
-            [drawerStops addObject:@([self collapsedHeight])];
+            CGFloat collapsedHeight = [self collapsedHeight];
+            [drawerStops addObject:@(collapsedHeight)];
+            if (self.currentPosition == AYPannelPositionCollapsed) {
+                currentDrawerPositionStop = collapsedHeight;
+            }
         }
 
         if ([self.supportedPostions containsObject:@(AYPannelPositionPartiallyRevealed)]) {
-            [drawerStops addObject:@([self partialRevealDrawerHeight])];
+            CGFloat partialHeight = [self partialRevealDrawerHeight];
+            [drawerStops addObject:@(partialHeight)];
+            if (self.currentPosition == AYPannelPositionPartiallyRevealed) {
+                currentDrawerPositionStop = partialHeight;
+            }
         }
         
         if ([self.supportedPostions containsObject:@(AYPannelPositionOpen)]) {
-            [drawerStops addObject:@(self.drawerScrollView.bounds.size.height)];
+            CGFloat openHeight = self.drawerScrollView.bounds.size.height;
+            [drawerStops addObject:@(openHeight)];
+            if (self.currentPosition == AYPannelPositionOpen) {
+                currentDrawerPositionStop = openHeight;
+            }
         }
         
         //取最小值
@@ -232,6 +252,7 @@ static CGFloat kAYDrawerCornerRadius = 13.0f;
         CGFloat distanceFromBottomOfView = lowestStop + self.lastDragTargetContentOffSet.y;
         CGFloat currentClosestStop = lowestStop;
         
+        AYPannelPosition cloestValidDrawerPosition = self.currentPosition;
         
         for (NSNumber *currentStop in drawerStops) {
             if (fabs(currentStop.floatValue - distanceFromBottomOfView) < fabs(currentClosestStop - distanceFromBottomOfView)) {
@@ -241,15 +262,59 @@ static CGFloat kAYDrawerCornerRadius = 13.0f;
         
         if (fabs(currentClosestStop - (self.drawerScrollView.frame.size.height)) <= FLT_EPSILON &&
             [self.supportedPostions containsObject:@(AYPannelPositionOpen)]) {
-            //open
-            [self p_setDrawerPosition:AYPannelPositionOpen animated:YES];
+//            //open
+//            [self p_setDrawerPosition:AYPannelPositionOpen animated:YES];
+            cloestValidDrawerPosition = AYPannelPositionOpen;
         } else if (fabs(currentClosestStop - [self collapsedHeight]) <= FLT_EPSILON &&
                    [self.supportedPostions containsObject:@(AYPannelPositionCollapsed)]) {
             //collapsed
-            [self p_setDrawerPosition:AYPannelPositionCollapsed animated:YES];
+//            [self p_setDrawerPosition:AYPannelPositionCollapsed animated:YES];
+            cloestValidDrawerPosition = AYPannelPositionCollapsed;
         } else if ([self.supportedPostions containsObject:@(AYPannelPositionPartiallyRevealed)]){
             //partially revealed
-            [self p_setDrawerPosition:AYPannelPositionPartiallyRevealed animated:YES];
+//            [self p_setDrawerPosition:AYPannelPositionPartiallyRevealed animated:YES];
+            cloestValidDrawerPosition = AYPannelPositionPartiallyRevealed;
+        }
+        
+        AYPannelSnapMode snapToUse = cloestValidDrawerPosition == self.currentPosition ? AYPannelSnapModeUnlessExceeded : AYPannelSnapModeNearestPosition;
+        
+        switch (snapToUse) {
+            case AYPannelSnapModeNearestPosition: {
+                [self p_setDrawerPosition:cloestValidDrawerPosition animated:YES];
+            }
+                break;
+            case AYPannelSnapModeUnlessExceeded: {
+                CGFloat distance = currentDrawerPositionStop - distanceFromBottomOfView;
+                AYPannelPosition positionToSnapTo = self.currentPosition;
+                if (fabs(distance) > kAYPannelSnapModeUnlessExceededThreshold) {
+                    if (distance < 0) {
+                        NSArray <NSNumber *> *sorted = [[self.supportedPostions allObjects] sortedArrayUsingComparator:^NSComparisonResult(id  _Nonnull obj1, id  _Nonnull obj2) {
+                            return [obj1 integerValue] < [obj2 integerValue];
+                        }];
+                        
+                        for (NSNumber *n in sorted) {
+                            if (n.integerValue != 0 && n.integerValue > self.currentPosition) {
+                                positionToSnapTo = (AYPannelPosition)n.integerValue;
+                                break;
+                            }
+                        }
+                    } else {
+                        NSArray <NSNumber *> *sorted = [[self.supportedPostions allObjects] sortedArrayUsingComparator:^NSComparisonResult(id  _Nonnull obj1, id  _Nonnull obj2) {
+                            return [obj1 integerValue] > [obj2 integerValue];
+                        }];
+                        
+                        for (NSNumber *n in sorted) {
+                            if (n.integerValue != 0 && n.integerValue < self.currentPosition) {
+                                positionToSnapTo = (AYPannelPosition)n.integerValue;
+                                break;
+                            }
+                        }
+                    }
+                }
+                [self p_setDrawerPosition:positionToSnapTo animated:YES];
+                
+            }
+                break;
         }
     }
 }

@@ -74,7 +74,7 @@
 }
 
 - (NSSet<NSNumber *> *)supportPannelPosition {
-    NSArray *array = @[@(AYPannelPositionCollapsed), @(AYPannelPositionOpen), @(AYPannelPositionClosed)];
+    NSArray *array = @[@(AYPannelPositionCollapsed), @(AYPannelPositionPartiallyRevealed), @(AYPannelPositionOpen), @(AYPannelPositionClosed)];
     return [NSSet setWithArray:array];
 }
 

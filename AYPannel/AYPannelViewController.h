@@ -9,10 +9,10 @@
 #import <UIKit/UIKit.h>
 
 typedef NS_ENUM(NSUInteger, AYPannelPosition) {
+    AYPannelPositionClosed, //不在可视范围
     AYPannelPositionCollapsed,//收起
     AYPannelPositionPartiallyRevealed, //部分展开
     AYPannelPositionOpen,//全部展开
-    AYPannelPositionClosed, //不在可视范围
 };
 
 @class AYPannelViewController;
