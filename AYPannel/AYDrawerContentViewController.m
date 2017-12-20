@@ -65,6 +65,10 @@
     }
 }
 
+- (void)drawerDraggingProgress:(CGFloat)progress {
+    NSLog(@"###### dragging progress is %f", progress);
+}
+
 - (CGFloat)collapsedDrawerHeight {
     return 68.0f;
 }

@@ -73,9 +73,9 @@ typedef NS_ENUM(NSUInteger, AYPannelSnapMode) {
         [self.drawerScrollView insertSubview:self.drawerBackgroundVisualEffectView aboveSubview:self.drawerShadowView];
         self.drawerBackgroundVisualEffectView.layer.cornerRadius = [self p_cornerRadius];
     }
-
+    
     [self.drawerScrollView addSubview:self.drawerContentContainer];
-
+    
     self.drawerScrollView.showsVerticalScrollIndicator = NO;
     self.drawerScrollView.showsHorizontalScrollIndicator = NO;
     self.drawerScrollView.bounces = NO;
@@ -85,7 +85,7 @@ typedef NS_ENUM(NSUInteger, AYPannelSnapMode) {
     self.drawerShadowView.layer.shadowOpacity = kAYDefaultShadowOpacity;
     self.drawerShadowView.layer.shadowRadius = kAYDefaultShadowRadius;
     self.drawerShadowView.backgroundColor = [UIColor clearColor];
-
+    
     
     self.pan = [[UIPanGestureRecognizer alloc] initWithTarget:self action:@selector(panGestureRecognizerAction:)];
     self.pan.delegate = self;
@@ -94,7 +94,7 @@ typedef NS_ENUM(NSUInteger, AYPannelSnapMode) {
     [self.view addSubview:self.primaryContentContainer];
     [self.view addSubview:self.backgroundDimmingView];
     [self.view addSubview:self.drawerScrollView];
-
+    
 }
 
 - (void)viewDidLayoutSubviews {
@@ -142,7 +142,7 @@ typedef NS_ENUM(NSUInteger, AYPannelSnapMode) {
     }
     
     CGFloat lowestStop = [[drawerStops valueForKeyPath:@"@min.floatValue"] floatValue];
-
+    
     if ([self.supportedPostions containsObject:@(AYPannelPositionOpen)]) {
         self.drawerScrollView.frame = CGRectMake(0, kAYTopInset + safeAreaTopInset, self.view.bounds.size.width, self.view.bounds.size.height - kAYTopInset - safeAreaTopInset);
     } else {
@@ -185,7 +185,7 @@ typedef NS_ENUM(NSUInteger, AYPannelSnapMode) {
     
     
     [self.backgroundDimmingView setHidden:NO];
-
+    
     
     [self p_setDrawerPosition:AYPannelPositionCollapsed animated:NO];
 }
@@ -214,10 +214,32 @@ typedef NS_ENUM(NSUInteger, AYPannelSnapMode) {
     
     CGFloat lowestStop = [[drawerStops valueForKeyPath:@"@min.floatValue"] floatValue];
     
+    
+    if ([self.drawerContentViewController respondsToSelector:@selector(drawerDraggingProgress:)]) {
+        
+        CGFloat safeAreaTopInset;
+        
+        if (@available(iOS 11.0, *)) {
+            safeAreaTopInset = self.view.safeAreaInsets.top;
+        } else {
+            safeAreaTopInset = self.topLayoutGuide.length;
+        }
+        
+        CGFloat spaceToDrag = self.drawerScrollView.bounds.size.height - safeAreaTopInset - lowestStop;
+        
+        CGFloat dragProgress = fabs(scrollView.contentOffset.y) / spaceToDrag;
+        if (dragProgress - 1 > FLT_EPSILON) { //in case greater than 1
+            dragProgress = 1.0f;
+        }
+        NSString *p = [NSString stringWithFormat:@"%.2f", dragProgress];
+        [self.drawerContentViewController drawerDraggingProgress:p.floatValue];
+    }
+    
     //蒙层颜色变化
     if ((scrollView.contentOffset.y - [self p_bottomSafeArea]) > ([self partialRevealDrawerHeight] - lowestStop)) {
-        CGFloat fullRevealHeight = self.drawerScrollView.bounds.size.height;
         CGFloat progress;
+        CGFloat fullRevealHeight = self.drawerScrollView.bounds.size.height;
+        
         if (fullRevealHeight == [self partialRevealDrawerHeight]) {
             progress = 1.0;
         } else {
@@ -286,7 +308,7 @@ typedef NS_ENUM(NSUInteger, AYPannelSnapMode) {
 #pragma mark - AYPassthroughScrollViewDelegate
 - (BOOL)shouldTouchPassthroughScrollView:(AYPassthroughScrollView *)scrollView
                                    point:(CGPoint)point {
-
+    
     CGPoint p = [self.drawerContentContainer convertPoint:point fromView:scrollView];
     return !CGRectContainsPoint(self.drawerContentContainer.bounds, p);
 }
@@ -407,19 +429,19 @@ typedef NS_ENUM(NSUInteger, AYPannelSnapMode) {
 - (void)p_maskBackgroundDimmingView {
     
     if (!self.backgroundDimmingView) { return; }
-
+    
     CGFloat cornerRadius = [self p_cornerRadius];
     CGFloat cutoutHeight = 2 * cornerRadius;
     CGFloat maskHeight = self.backgroundDimmingView.bounds.size.height - cutoutHeight - self.drawerScrollView.contentSize.height;
     CGFloat maskWidth = self.backgroundDimmingView.bounds.size.width;
     CGRect drawerRect = CGRectMake(0, maskHeight, maskWidth, self.drawerContentContainer.bounds.size.height);
-
+    
     UIBezierPath *path = [UIBezierPath bezierPathWithRoundedRect:drawerRect byRoundingCorners:UIRectCornerTopLeft|UIRectCornerTopRight cornerRadii:CGSizeMake(cornerRadius, cornerRadius)];
     CAShapeLayer *layer = [[CAShapeLayer alloc] init];
-
+    
     [path appendPath:[UIBezierPath bezierPathWithRect:self.backgroundDimmingView.bounds]];
     [layer setFillRule:kCAFillRuleEvenOdd];
-
+    
     layer.path = path.CGPath;
     self.backgroundDimmingView.layer.mask = layer;
 }
@@ -609,3 +631,4 @@ typedef NS_ENUM(NSUInteger, AYPannelSnapMode) {
 
 
 @end
+
