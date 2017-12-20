@@ -393,22 +393,22 @@ typedef NS_ENUM(NSUInteger, AYPannelSnapMode) {
 
 - (void)p_maskBackgroundDimmingView {
     
-//    if (!self.backgroundDimmingView) { return; }
-//
-//    CGFloat cornerRadius = [self p_cornerRadius];
-//    CGFloat cutoutHeight = 2 * cornerRadius;
-//    CGFloat maskHeight = self.backgroundDimmingView.bounds.size.height - cutoutHeight - self.drawerScrollView.contentSize.height;
-//    CGFloat maskWidth = self.backgroundDimmingView.bounds.size.width;
-//    CGRect drawerRect = CGRectMake(0, maskHeight, maskWidth, self.drawerContentContainer.bounds.size.height);
-//
-//    UIBezierPath *path = [UIBezierPath bezierPathWithRoundedRect:drawerRect byRoundingCorners:UIRectCornerTopLeft|UIRectCornerTopRight cornerRadii:CGSizeMake(cornerRadius, cornerRadius)];
-//    CAShapeLayer *layer = [[CAShapeLayer alloc] init];
-//
-//    [path appendPath:[UIBezierPath bezierPathWithRect:self.backgroundDimmingView.bounds]];
-//    [layer setFillRule:kCAFillRuleEvenOdd];
-//
-//    layer.path = path.CGPath;
-//    self.backgroundDimmingView.layer.mask = layer;
+    if (!self.backgroundDimmingView) { return; }
+
+    CGFloat cornerRadius = [self p_cornerRadius];
+    CGFloat cutoutHeight = 2 * cornerRadius;
+    CGFloat maskHeight = self.backgroundDimmingView.bounds.size.height - cutoutHeight - self.drawerScrollView.contentSize.height;
+    CGFloat maskWidth = self.backgroundDimmingView.bounds.size.width;
+    CGRect drawerRect = CGRectMake(0, maskHeight, maskWidth, self.drawerContentContainer.bounds.size.height);
+
+    UIBezierPath *path = [UIBezierPath bezierPathWithRoundedRect:drawerRect byRoundingCorners:UIRectCornerTopLeft|UIRectCornerTopRight cornerRadii:CGSizeMake(cornerRadius, cornerRadius)];
+    CAShapeLayer *layer = [[CAShapeLayer alloc] init];
+
+    [path appendPath:[UIBezierPath bezierPathWithRect:self.backgroundDimmingView.bounds]];
+    [layer setFillRule:kCAFillRuleEvenOdd];
+
+    layer.path = path.CGPath;
+    self.backgroundDimmingView.layer.mask = layer;
 }
 
 - (CGFloat)p_bottomSafeArea {
