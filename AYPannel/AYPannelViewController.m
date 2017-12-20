@@ -127,9 +127,22 @@ typedef NS_ENUM(NSUInteger, AYPannelSnapMode) {
         self.automaticallyAdjustsScrollViewInsets = NO;
         self.drawerScrollView.contentInset = UIEdgeInsetsMake(0, 0, self.bottomLayoutGuide.length, 0);
     }
+    NSMutableArray <NSNumber *> *drawerStops = [[NSMutableArray alloc] init];
     
-    CGFloat lowestStop = [[@[@(self.view.bounds.size.height - kAYTopInset - safeAreaTopInset), @([self collapsedHeight]), @([self partialRevealDrawerHeight])] valueForKeyPath:@"@min.floatValue"] floatValue];
+    if ([self.supportedPostions containsObject:@(AYPannelPositionCollapsed)]) {
+        [drawerStops addObject:@([self collapsedHeight])];
+    }
     
+    if ([self.supportedPostions containsObject:@(AYPannelPositionPartiallyRevealed)]) {
+        [drawerStops addObject:@([self partialRevealDrawerHeight])];
+    }
+    
+    if ([self.supportedPostions containsObject:@(AYPannelPositionOpen)]) {
+        [drawerStops addObject:@(self.drawerScrollView.bounds.size.height)];
+    }
+    
+    CGFloat lowestStop = [[drawerStops valueForKeyPath:@"@min.floatValue"] floatValue];
+
     if ([self.supportedPostions containsObject:@(AYPannelPositionOpen)]) {
         self.drawerScrollView.frame = CGRectMake(0, kAYTopInset + safeAreaTopInset, self.view.bounds.size.width, self.view.bounds.size.height - kAYTopInset - safeAreaTopInset);
     } else {
