@@ -79,6 +79,7 @@ typedef NS_ENUM(NSUInteger, AYPannelSnapMode) {
     self.drawerScrollView.showsVerticalScrollIndicator = NO;
     self.drawerScrollView.showsHorizontalScrollIndicator = NO;
     self.drawerScrollView.bounces = NO;
+    self.drawerScrollView.canCancelContentTouches = YES;
     self.drawerScrollView.decelerationRate = UIScrollViewDecelerationRateFast;
     self.drawerScrollView.touchDelegate = self;
     

@@ -22,4 +22,14 @@
     return [super hitTest:point withEvent:event];
 }
 
+
+//如果scroll view上有button，优先滚动
+- (BOOL)touchesShouldCancelInContentView:(UIView *)view
+{
+    if ( [view isKindOfClass:[UIButton class]] ) {
+        return YES;
+    }
+    
+    return [super touchesShouldCancelInContentView:view];
+}
 @end

@@ -12,6 +12,7 @@
 @interface AYDrawerContentViewController () <UITableViewDataSource, UITableViewDelegate>
 @property (nonatomic, strong) UIView *headerView;
 @property (nonatomic, strong) UITableView *tableView;
+@property (nonatomic, strong) UIButton *button;
 @end
 
 @implementation AYDrawerContentViewController
@@ -20,8 +21,8 @@
     [super viewDidLoad];
     
     [self.view addSubview:self.headerView];
-    [self.view addSubview:self.tableView];
-    self.view.backgroundColor = [UIColor yellowColor];
+//    [self.view addSubview:self.tableView];
+    self.view.backgroundColor = [UIColor blueColor];
     
     [self.tableView setScrollEnabled:NO];
     self.tableView.bounces = NO;
@@ -34,6 +35,7 @@
     
     self.headerView.frame = CGRectMake(0, 0, self.view.bounds.size.width, 60);
     self.tableView.frame = CGRectMake(0, 60, self.view.bounds.size.width, self.view.bounds.size.height - 60);
+    self.button.frame = CGRectMake(100, 0, 50, 50);
 }
 #pragma mark - UITableViewDataSource
 - (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView {
@@ -78,7 +80,7 @@
 }
 
 - (NSSet<NSNumber *> *)supportPannelPosition {
-    NSArray *array = @[@(AYPannelPositionCollapsed), @(AYPannelPositionPartiallyRevealed), @(AYPannelPositionOpen), @(AYPannelPositionClosed)];
+    NSArray *array = @[@(AYPannelPositionCollapsed), @(AYPannelPositionPartiallyRevealed), @(AYPannelPositionClosed)];
     return [NSSet setWithArray:array];
 }
 
@@ -121,7 +123,16 @@
     if (!_headerView) {
         _headerView = [[UIView alloc] init];
         _headerView.backgroundColor = [UIColor clearColor];
+        
+        _button = [UIButton buttonWithType:UIButtonTypeCustom];
+        [_button setTitle:@"button" forState:UIControlStateNormal];
+        [_button addTarget:self action:@selector(buttonPressed) forControlEvents:UIControlEventTouchUpInside];
+        [_headerView addSubview:_button];
     }
     return _headerView;
+}
+
+- (void)buttonPressed {
+    NSLog(@"################");
 }
 @end
