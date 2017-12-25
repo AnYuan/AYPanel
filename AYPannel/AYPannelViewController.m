@@ -12,7 +12,6 @@
 static CGFloat kAYDefaultCollapsedHeight = 68.0f; //默认收起大小
 static CGFloat kAYDefaultPartialRevealHeight = 264.0f; //默认部分展开大小
 
-static CGFloat kAYTopInset = 20.0f;
 static CGFloat kAYBounceOverflowMargin = 20.0f;
 static CGFloat kAYDefaultDimmingOpacity = 0.5f;
 
@@ -139,7 +138,7 @@ typedef NS_ENUM(NSUInteger, AYPannelSnapMode) {
     }
     
     if ([self.supportedPostions containsObject:@(AYPannelPositionOpen)]) {
-        [drawerStops addObject:@(self.drawerScrollView.bounds.size.height)];
+        [drawerStops addObject:@(self.drawerScrollView.bounds.size.height - kAYTopInset - safeAreaTopInset)];
     }
     
     CGFloat lowestStop = [[drawerStops valueForKeyPath:@"@min.floatValue"] floatValue];
@@ -283,7 +282,9 @@ typedef NS_ENUM(NSUInteger, AYPannelSnapMode) {
     
     if (getsutre.state == UIGestureRecognizerStateChanged) {
         CGPoint old = [getsutre translationInView:self.drawerScrollView];
-        CGPoint p = CGPointMake(0, self.drawerScrollView.frame.size.height - fabs(old.y) - 80);
+        //如果y < 0就不要改变contentOffSet了
+        if (old.y < 0) { return; }
+        CGPoint p = CGPointMake(0, self.drawerScrollView.frame.size.height - old.y - [self collapsedHeight]);
         [self.drawerScrollView setContentOffset:p];
     } else if (getsutre.state == UIGestureRecognizerStateEnded) {
         self.shouldScrollDrawerScrollView = NO;
