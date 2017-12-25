@@ -17,6 +17,8 @@ typedef NS_ENUM(NSUInteger, AYPannelPosition) {
 
 @class AYPannelViewController;
 
+static CGFloat kAYTopInset = 20.0f;
+
 //通知外界drawerPosition发生变化
 @protocol AYPannelDrawerDelegate <NSObject>
 @property (nonatomic, strong) UIView *view;

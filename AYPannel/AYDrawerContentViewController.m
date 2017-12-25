@@ -21,7 +21,7 @@
     [super viewDidLoad];
     
     [self.view addSubview:self.headerView];
-//    [self.view addSubview:self.tableView];
+    [self.view addSubview:self.tableView];
     self.view.backgroundColor = [UIColor blueColor];
     
     [self.tableView setScrollEnabled:NO];
@@ -34,7 +34,7 @@
     [super viewDidLayoutSubviews];
     
     self.headerView.frame = CGRectMake(0, 0, self.view.bounds.size.width, 60);
-    self.tableView.frame = CGRectMake(0, 60, self.view.bounds.size.width, self.view.bounds.size.height - 60);
+    self.tableView.frame = CGRectMake(0, 60, self.view.bounds.size.width, self.view.bounds.size.height - 60 - kAYTopInset);
     self.button.frame = CGRectMake(100, 0, 50, 50);
 }
 #pragma mark - UITableViewDataSource
@@ -68,7 +68,7 @@
 }
 
 - (void)drawerDraggingProgress:(CGFloat)progress {
-    NSLog(@"###### dragging progress is %f", progress);
+//    NSLog(@"###### dragging progress is %f", progress);
 }
 
 - (CGFloat)collapsedDrawerHeight {
@@ -80,7 +80,7 @@
 }
 
 - (NSSet<NSNumber *> *)supportPannelPosition {
-    NSArray *array = @[@(AYPannelPositionCollapsed), @(AYPannelPositionPartiallyRevealed), @(AYPannelPositionClosed)];
+    NSArray *array = @[@(AYPannelPositionCollapsed), @(AYPannelPositionPartiallyRevealed), @(AYPannelPositionOpen),@(AYPannelPositionClosed)];
     return [NSSet setWithArray:array];
 }
 
