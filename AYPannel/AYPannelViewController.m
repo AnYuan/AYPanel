@@ -18,14 +18,6 @@ static CGFloat kAYDefaultDimmingOpacity = 0.5f;
 static CGFloat kAYDefaultShadowOpacity = 0.1f;
 static CGFloat kAYDefaultShadowRadius = 3.0f;
 
-static CGFloat kAYPannelSnapModeUnlessExceededThreshold = 20.0f;
-
-typedef NS_ENUM(NSUInteger, AYPannelSnapMode) {
-    AYPannelSnapModeNearestPosition,
-    AYPannelSnapModeUnlessExceeded,
-};
-
-
 @interface AYPannelViewController () <UIScrollViewDelegate, UIGestureRecognizerDelegate, AYPassthroughScrollViewDelegate>
 @property (nonatomic, assign) CGPoint lastDragTargetContentOffSet; //记录上次滑动位置
 @property (nonatomic, assign) BOOL isAnimatingDrawerPosition;
@@ -267,6 +259,9 @@ typedef NS_ENUM(NSUInteger, AYPannelSnapMode) {
 - (void)scrollViewWillEndDragging:(UIScrollView *)scrollView withVelocity:(CGPoint)velocity targetContentOffset:(inout CGPoint *)targetContentOffset {
     if (scrollView == self.drawerScrollView) {
         self.lastDragTargetContentOffSet = CGPointMake(targetContentOffset->x, targetContentOffset->y);
+        
+        NSLog(@"last drag target contentoffset y is %f", self.lastDragTargetContentOffSet.y);
+        
         *targetContentOffset = scrollView.contentOffset;
     }
 }
@@ -282,13 +277,20 @@ typedef NS_ENUM(NSUInteger, AYPannelSnapMode) {
     
     if (getsutre.state == UIGestureRecognizerStateChanged) {
         CGPoint old = [getsutre translationInView:self.drawerScrollView];
+        
+        
         //如果y < 0就不要改变contentOffSet了
         if (old.y < 0) { return; }
         CGPoint p = CGPointMake(0, self.drawerScrollView.frame.size.height - old.y - [self collapsedHeight]);
+        self.lastDragTargetContentOffSet = p;
         [self.drawerScrollView setContentOffset:p];
     } else if (getsutre.state == UIGestureRecognizerStateEnded) {
         self.shouldScrollDrawerScrollView = NO;
         
+//        CGPoint old = [getsutre translationInView:self.drawerScrollView];
+//        self.lastDragTargetContentOffSet = old;
+        NSLog(@"####");
+
         [self p_setDrawerPosition:[self p_postionToMoveFromPostion:self.currentPosition lastDragTargetContentOffSet:self.lastDragTargetContentOffSet scrollView:self.drawerScrollView supportedPosition:self.supportedPostions] animated:YES];
     }
 }
@@ -479,8 +481,6 @@ typedef NS_ENUM(NSUInteger, AYPannelSnapMode) {
                                     scrollView:(UIScrollView *)scrollView
                              supportedPosition:(NSSet <NSNumber *> *)supportedPosition {
     
-    AYPannelPosition positionToMove;
-    
     NSMutableArray <NSNumber *> *drawerStops = [[NSMutableArray alloc] init];
     CGFloat currentDrawerPositionStop = 0.0f;
     
@@ -537,47 +537,7 @@ typedef NS_ENUM(NSUInteger, AYPannelSnapMode) {
         
     }
     
-    AYPannelSnapMode snapToUse = cloestValidDrawerPosition == currentPosition ? AYPannelSnapModeUnlessExceeded : AYPannelSnapModeNearestPosition;
-    
-    switch (snapToUse) {
-        case AYPannelSnapModeNearestPosition: {
-            positionToMove = cloestValidDrawerPosition;
-        }
-            break;
-        case AYPannelSnapModeUnlessExceeded: {
-            CGFloat distance = currentDrawerPositionStop - distanceFromBottomOfView;
-            AYPannelPosition positionToSnapTo = currentPosition;
-            if (fabs(distance) > kAYPannelSnapModeUnlessExceededThreshold) {
-                if (distance < 0) {
-                    NSArray <NSNumber *> *sorted = [[supportedPosition allObjects] sortedArrayUsingComparator:^NSComparisonResult(id  _Nonnull obj1, id  _Nonnull obj2) {
-                        return [obj1 integerValue] < [obj2 integerValue];
-                    }];
-                    
-                    for (NSNumber *n in sorted) {
-                        if (n.integerValue != AYPannelPositionClosed && n.integerValue > self.currentPosition) {
-                            positionToSnapTo = (AYPannelPosition)n.integerValue;
-                            break;
-                        }
-                    }
-                } else {
-                    NSArray <NSNumber *> *sorted = [[supportedPosition allObjects] sortedArrayUsingComparator:^NSComparisonResult(id  _Nonnull obj1, id  _Nonnull obj2) {
-                        return [obj1 integerValue] > [obj2 integerValue];
-                    }];
-                    
-                    for (NSNumber *n in sorted) {
-                        if (n.integerValue != AYPannelPositionClosed && n.integerValue < self.currentPosition) {
-                            positionToSnapTo = (AYPannelPosition)n.integerValue;
-                            break;
-                        }
-                    }
-                }
-            }
-            positionToMove = positionToSnapTo;
-        }
-            break;
-    }
-    
-    return positionToMove;
+    return cloestValidDrawerPosition;
 }
 
 - (void)p_setDrawerPosition:(AYPannelPosition)position
