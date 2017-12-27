@@ -38,6 +38,9 @@ static CGFloat kAYDefaultShadowRadius = 3.0f;
 @property (nonatomic, strong) id <AYPannelDrawerDelegate>drawerContentViewController; //抽屉视图VC
 
 @property (nonatomic, strong) NSSet <NSNumber *> *supportedPostions;
+
+@property (nonatomic, assign) BOOL shouldScrollSubScrollView;
+
 @end
 
 @implementation AYPannelViewController
@@ -222,6 +225,12 @@ static CGFloat kAYDefaultShadowRadius = 3.0f;
         CGFloat dragProgress = fabs(scrollView.contentOffset.y) / spaceToDrag;
         if (dragProgress - 1 > FLT_EPSILON) { //in case greater than 1
             dragProgress = 1.0f;
+            self.changeScrollViewToScroll = YES;
+            NSLog(@"################ scroll view did scroll change is YES");
+
+        } else {
+            self.changeScrollViewToScroll = NO;
+            NSLog(@"################ scroll view did scroll change is NO");
         }
         NSString *p = [NSString stringWithFormat:@"%.2f", dragProgress];
         [self.drawerContentViewController drawerDraggingProgress:p.floatValue];
@@ -259,9 +268,6 @@ static CGFloat kAYDefaultShadowRadius = 3.0f;
 - (void)scrollViewWillEndDragging:(UIScrollView *)scrollView withVelocity:(CGPoint)velocity targetContentOffset:(inout CGPoint *)targetContentOffset {
     if (scrollView == self.drawerScrollView) {
         self.lastDragTargetContentOffSet = CGPointMake(targetContentOffset->x, targetContentOffset->y);
-        
-        NSLog(@"last drag target contentoffset y is %f", self.lastDragTargetContentOffSet.y);
-        
         *targetContentOffset = scrollView.contentOffset;
     }
 }
@@ -273,39 +279,108 @@ static CGFloat kAYDefaultShadowRadius = 3.0f;
 
 - (void)panGestureRecognizerAction:(UIPanGestureRecognizer *)getsutre {
     
-    if (!self.shouldScrollDrawerScrollView) { return; }
+    //YES,
+    //向下滑时， subscroll不可以滚动，drawer可以滚动
     
-    if (getsutre.state == UIGestureRecognizerStateChanged) {
-        CGPoint old = [getsutre translationInView:self.drawerScrollView];
-        
-        
-        //如果y < 0就不要改变contentOffSet了
-        if (old.y < 0) { return; }
-        CGPoint p = CGPointMake(0, self.drawerScrollView.frame.size.height - old.y - [self collapsedHeight]);
-        self.lastDragTargetContentOffSet = p;
-        [self.drawerScrollView setContentOffset:p];
-    } else if (getsutre.state == UIGestureRecognizerStateEnded) {
-        self.shouldScrollDrawerScrollView = NO;
-        
-//        CGPoint old = [getsutre translationInView:self.drawerScrollView];
-//        self.lastDragTargetContentOffSet = old;
-        NSLog(@"####");
+    BOOL isScrollUp = NO;
+    
+    CGPoint velocity = [getsutre velocityInView:self.drawerScrollView];
+    
+    BOOL isVertical = fabs(velocity.y) > fabs(velocity.x);
+    
+    if (isVertical) {
+        isScrollUp = velocity.y <= 0 ? YES : NO;
+    } else {
+        return;
+    }
+    
+    UIScrollView *subScrollView = self.drawerContentViewController.subScrollView;
 
-        [self p_setDrawerPosition:[self p_postionToMoveFromPostion:self.currentPosition lastDragTargetContentOffSet:self.lastDragTargetContentOffSet scrollView:self.drawerScrollView supportedPosition:self.supportedPostions] animated:YES];
+    //滑动到临界点
+    if (self.changeScrollViewToScroll) {
+        
+        if (isScrollUp) { //上滑,subscroll可以滚动，drawer不可以滚动
+            NSLog(@"################ scroll up change is YES");
+
+            if (getsutre.state == UIGestureRecognizerStateChanged) {
+                //scroll subscroll
+                CGPoint old = [getsutre translationInView:subScrollView];
+                [subScrollView setContentOffset:CGPointMake(0, -old.y)];
+                NSLog(@"################ off set y is %f", old.y);
+            }
+            
+        } else { // 下滑, subscroll不可以滚动, drawer可以滚动
+            NSLog(@"################ scroll down change is YES");
+
+            if (CGPointEqualToPoint(subScrollView.contentOffset, CGPointZero)) {
+                NSLog(@"################ scroll down change is YES sub zero");
+                [subScrollView setScrollEnabled:NO];
+                if (getsutre.state == UIGestureRecognizerStateChanged) {
+                    CGPoint old = [getsutre translationInView:self.drawerScrollView];
+                    CGPoint p = CGPointMake(0, self.drawerScrollView.frame.size.height - old.y - [self collapsedHeight]);
+                    self.lastDragTargetContentOffSet = p;
+                    [self.drawerScrollView setContentOffset:p];
+                } else if (getsutre.state == UIGestureRecognizerStateEnded) {
+                    
+                    [self p_setDrawerPosition:[self p_postionToMoveFromPostion:self.currentPosition lastDragTargetContentOffSet:self.lastDragTargetContentOffSet scrollView:self.drawerScrollView supportedPosition:self.supportedPostions] animated:YES];
+                }
+            } else {
+                CGPoint old = [getsutre translationInView:subScrollView];
+                NSLog(@"################ scroll down change is YES sub not zero y is %f", old.y);
+                [subScrollView setScrollEnabled:YES];
+                [subScrollView setContentOffset:CGPointMake(0, 350 + old.y)];
+            }
+        }
+    } else {
+//        [subScrollView setScrollEnabled:NO];
+//        if (getsutre.state == UIGestureRecognizerStateChanged) {
+//            CGPoint old = [getsutre translationInView:self.drawerScrollView];
+//            //如果y < 0就不要改变contentOffSet了
+//            if (old.y < 0) { return; }
+//            CGPoint p = CGPointMake(0, self.drawerScrollView.frame.size.height - old.y - [self collapsedHeight]);
+//            self.lastDragTargetContentOffSet = p;
+//            [self.drawerScrollView setContentOffset:p];
+//        } else if (getsutre.state == UIGestureRecognizerStateEnded) {
+//
+//            [self p_setDrawerPosition:[self p_postionToMoveFromPostion:self.currentPosition lastDragTargetContentOffSet:self.lastDragTargetContentOffSet scrollView:self.drawerScrollView supportedPosition:self.supportedPostions] animated:YES];
+//        }
+
+
+        if (isScrollUp) {
+            NSLog(@"################ scroll up change is NO");
+//            [subScrollView setScrollEnabled:NO];
+
+        } else {
+            NSLog(@"################ scroll down change is NO");
+//            if (getsutre.state == UIGestureRecognizerStateChanged) {
+//                CGPoint old = [getsutre translationInView:self.drawerScrollView];
+//                //如果y < 0就不要改变contentOffSet了
+//                if (old.y < 0) { return; }
+//                CGPoint p = CGPointMake(0, self.drawerScrollView.frame.size.height - old.y - [self collapsedHeight]);
+//                self.lastDragTargetContentOffSet = p;
+//                [self.drawerScrollView setContentOffset:p];
+//            } else if (getsutre.state == UIGestureRecognizerStateEnded) {
+//
+//                self.changeScrollViewToScroll = NO;
+//                [self p_setDrawerPosition:[self p_postionToMoveFromPostion:self.currentPosition lastDragTargetContentOffSet:self.lastDragTargetContentOffSet scrollView:self.drawerScrollView supportedPosition:self.supportedPostions] animated:YES];
+//            }
+        }
     }
 }
 
 #pragma mark - AYDrawerScrollViewDelegate
 
 - (void)drawerScrollViewDidScroll:(UIScrollView *)scrollView {
+    
     //当drawer中的scroll view 的contentOffset.y 为 0时，触发drawerScrollView滚动
     if (CGPointEqualToPoint(scrollView.contentOffset, CGPointZero)) {
-        self.shouldScrollDrawerScrollView = YES;
-        [scrollView setScrollEnabled:NO];
+//
+//        self.changeScrollViewToScroll = YES;
+//        [scrollView setScrollEnabled:NO];
         
     } else {
-        self.shouldScrollDrawerScrollView = NO;
-        [scrollView setScrollEnabled:YES];
+//        self.changeScrollViewToScroll = NO;
+//        [scrollView setScrollEnabled:YES];
     }
 }
 

@@ -71,6 +71,10 @@
 //    NSLog(@"###### dragging progress is %f", progress);
 }
 
+- (UIScrollView *)subScrollView {
+    return self.tableView;
+}
+
 - (CGFloat)collapsedDrawerHeight {
     return 68.0f;
 }

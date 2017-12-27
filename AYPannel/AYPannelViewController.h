@@ -25,6 +25,7 @@ static CGFloat kAYTopInset = 20.0f;
 
 - (void)drawerPositionDidChange:(AYPannelViewController *)drawer;
 @optional
+@property (nonatomic, weak) UIScrollView *subScrollView;
 - (void)drawerDraggingProgress:(CGFloat)progress;//0 - 1
 
 - (CGFloat)collapsedDrawerHeight;
@@ -48,7 +49,7 @@ static CGFloat kAYTopInset = 20.0f;
 @interface AYPannelViewController : UIViewController <AYDrawerScrollViewDelegate>
 
 @property (nonatomic, assign) AYPannelPosition currentPosition;
-@property (nonatomic, assign) BOOL shouldScrollDrawerScrollView;
+@property (nonatomic, assign) BOOL changeScrollViewToScroll;
 
 - (instancetype)initWithPrimaryContentViewController:(id<AYPannelPrimaryDelegate>)primaryContentViewController
                          drawerContentViewController:(id<AYPannelDrawerDelegate>)drawerContentViewController;
