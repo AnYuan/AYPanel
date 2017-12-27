@@ -25,6 +25,7 @@ static CGFloat kAYTopInset = 20.0f;
 
 - (void)drawerPositionDidChange:(AYPannelViewController *)drawer;
 @optional
+@property (nonatomic, weak) UIScrollView *subScrollView;
 - (void)drawerDraggingProgress:(CGFloat)progress;//0 - 1
 
 - (CGFloat)collapsedDrawerHeight;

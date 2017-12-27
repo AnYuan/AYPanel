@@ -60,15 +60,19 @@
 
 #pragma mark - AYPannelViewControllerDelegate
 - (void)drawerPositionDidChange:(AYPannelViewController *)drawer {
-    if (drawer.currentPosition == AYPannelPositionOpen) {
-        [self.tableView setScrollEnabled:YES];
-    } else {
-        [self.tableView setScrollEnabled:NO];
-    }
+//    if (drawer.currentPosition == AYPannelPositionOpen) {
+//        [self.tableView setScrollEnabled:YES];
+//    } else {
+//        [self.tableView setScrollEnabled:NO];
+//    }
 }
 
 - (void)drawerDraggingProgress:(CGFloat)progress {
 //    NSLog(@"###### dragging progress is %f", progress);
+}
+
+- (UIScrollView *)subScrollView {
+    return self.tableView;
 }
 
 - (CGFloat)collapsedDrawerHeight {
