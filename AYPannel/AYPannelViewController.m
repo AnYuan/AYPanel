@@ -259,9 +259,6 @@ static CGFloat kAYDefaultShadowRadius = 3.0f;
 - (void)scrollViewWillEndDragging:(UIScrollView *)scrollView withVelocity:(CGPoint)velocity targetContentOffset:(inout CGPoint *)targetContentOffset {
     if (scrollView == self.drawerScrollView) {
         self.lastDragTargetContentOffSet = CGPointMake(targetContentOffset->x, targetContentOffset->y);
-        
-        NSLog(@"last drag target contentoffset y is %f", self.lastDragTargetContentOffSet.y);
-        
         *targetContentOffset = scrollView.contentOffset;
     }
 }
@@ -277,20 +274,12 @@ static CGFloat kAYDefaultShadowRadius = 3.0f;
     
     if (getsutre.state == UIGestureRecognizerStateChanged) {
         CGPoint old = [getsutre translationInView:self.drawerScrollView];
-        
-        
-        //如果y < 0就不要改变contentOffSet了
         if (old.y < 0) { return; }
         CGPoint p = CGPointMake(0, self.drawerScrollView.frame.size.height - old.y - [self collapsedHeight]);
         self.lastDragTargetContentOffSet = p;
         [self.drawerScrollView setContentOffset:p];
     } else if (getsutre.state == UIGestureRecognizerStateEnded) {
         self.shouldScrollDrawerScrollView = NO;
-        
-//        CGPoint old = [getsutre translationInView:self.drawerScrollView];
-//        self.lastDragTargetContentOffSet = old;
-        NSLog(@"####");
-
         [self p_setDrawerPosition:[self p_postionToMoveFromPostion:self.currentPosition lastDragTargetContentOffSet:self.lastDragTargetContentOffSet scrollView:self.drawerScrollView supportedPosition:self.supportedPostions] animated:YES];
     }
 }
