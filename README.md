@@ -3,6 +3,11 @@
 inspired by [Pulley](https://github.com/52inc/Pulley)
 
 
+preview:
+
+![](/preview.gif)
+
+
 TODO:
 - [X] pass through touch to scroll view.
 - [X] 向下滑动时，不顺滑问题(需要滑动两次)
